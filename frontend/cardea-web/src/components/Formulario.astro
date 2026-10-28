@@ -1,0 +1,62 @@
+---
+/**
+ * Formulario de contacto para pedir una demo. El endpoint se inyecta en build (PUBLIC_WAITLIST_ENDPOINT,
+ * módulo infra/modules/waitlist). Sin endpoint, simula el envío para poder maquetar en local.
+ */
+interface Props { id?: string }
+const { id = "demo" } = Astro.props;
+const endpoint = import.meta.env.PUBLIC_WAITLIST_ENDPOINT ?? "";
+---
+<form class="f" id={id} novalidate data-form data-endpoint={endpoint}>
+  <div class="campos">
+    <input class="in" type="text" name="nombre" placeholder="Nombre" autocomplete="name" required aria-label="Nombre" />
+    <input class="in" type="email" name="email" placeholder="Correo de empresa" autocomplete="email" required aria-label="Correo de empresa" />
+    <input class="in" type="text" name="empresa" placeholder="Empresa" autocomplete="organization" aria-label="Empresa" />
+    <select class="in" name="uso" aria-label="Cómo usáis la IA hoy">
+      <option value="">Cómo usáis la IA hoy</option>
+      <option value="api">Aplicaciones por API</option>
+      <option value="clis">CLIs de código (Claude Code, Codex, Copilot)</option>
+      <option value="asientos">Asientos y chat web</option>
+      <option value="todo">Las tres cosas</option>
+    </select>
+  </div>
+  <button class="btn btn-primary" type="submit" data-submit>Pedir una demo</button>
+  <p class="estado" data-estado role="status" aria-live="polite"></p>
+  <p class="nota">Sin listas de marketing. Te escribimos nosotros, no un bot.</p>
+</form>
+<script>
+  const form = document.querySelector<HTMLFormElement>("[data-form]");
+  if (form) {
+    const estado = form.querySelector<HTMLElement>("[data-estado]")!;
+    const boton = form.querySelector<HTMLButtonElement>("[data-submit]")!;
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!form.checkValidity()) { estado.textContent = "Revisa el nombre y el correo."; return; }
+      const datos = Object.fromEntries(new FormData(form).entries());
+      boton.disabled = true; estado.textContent = "Enviando…";
+      try {
+        const endpoint = form.dataset.endpoint;
+        if (endpoint) {
+          const r = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) });
+          if (!r.ok) throw new Error(String(r.status));
+        } else {
+          await new Promise((res) => setTimeout(res, 500));
+        }
+        estado.textContent = "Recibido. Te contestamos en dos días laborables.";
+        form.reset();
+      } catch {
+        estado.textContent = "No se ha podido enviar. Escríbenos a hola@cardea.ai.";
+      } finally { boton.disabled = false; }
+    });
+  }
+</script>
+<style>
+  .f { display: flex; flex-direction: column; gap: 12px; max-width: 560px; }
+  .campos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .in { font: inherit; font-size: 15px; padding: 13px 16px; border-radius: 14px; border: 1px solid var(--cardea-linea); background: #fff; color: var(--cardea-tinta); min-width: 0; }
+  .in:focus { outline: 2px solid var(--cardea-petroleo); outline-offset: 1px; border-color: transparent; }
+  .btn { align-self: flex-start; }
+  .estado { min-height: 1.4em; font-size: 14px; color: var(--cardea-petroleo); }
+  .nota { font-size: 13px; color: var(--cardea-texto-suave); }
+  @media (max-width: 560px) { .campos { grid-template-columns: 1fr; } }
+</style>

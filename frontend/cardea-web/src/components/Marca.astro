@@ -1,0 +1,11 @@
+---
+import Isotipo from "./Isotipo.astro";
+interface Props { size?: number; dark?: boolean; href?: string }
+const { size = 28, dark = false, href = "/" } = Astro.props;
+---
+<a href={href} class="marca" aria-label="Cardea, inicio" style={`--s:${size}px;color:${dark ? "#fff" : "var(--cardea-tinta)"}`}>
+  <Isotipo size={size} dark={dark} /><span>Cardea</span>
+</a>
+<style>
+  .marca { display: inline-flex; align-items: center; gap: calc(var(--s) * 0.32); font-weight: 600; letter-spacing: -0.02em; font-size: calc(var(--s) * 0.82); line-height: 1; }
+</style>

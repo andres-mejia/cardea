@@ -1,0 +1,23 @@
+name: frontend · build
+
+on:
+  pull_request:
+    paths: ["frontend/**", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ".github/workflows/frontend-ci.yml"]
+  push:
+    branches: [main]
+    paths: ["frontend/**", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.4.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Landing · build y check
+        run: pnpm -C frontend/cardea-web build && pnpm -C frontend/cardea-web check
+      - name: Panel · type-check y build
+        run: pnpm -C frontend/cardea-app type-check && pnpm -C frontend/cardea-app build

@@ -1,0 +1,11 @@
+---
+/** Símbolo «Gozne» (ADR-001): la C del nombre y el punto del gozne. */
+interface Props { size?: number; dark?: boolean; class?: string }
+const { size = 28, dark = false, class: cls = "" } = Astro.props;
+const ink = dark ? "#FFFFFF" : "var(--cardea-tinta)";
+const dot = dark ? "var(--cardea-petroleo-claro)" : "var(--cardea-petroleo)";
+---
+<svg viewBox="0 0 96 96" width={size} height={size} class={cls} aria-hidden="true" style="display:block;flex:none">
+  <path d="M 72 72 A 34 34 0 1 1 72 24" style={`fill:none;stroke:${ink};stroke-width:11;stroke-linecap:butt`} />
+  <circle cx="48" cy="48" r="10" style={`fill:${dot}`} />
+</svg>

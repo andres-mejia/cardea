@@ -1,0 +1,27 @@
+# Entorno local del data plane. Postgres para las claves virtuales del gateway; el control plane se añade cuando exista.
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: cardea
+      POSTGRES_USER: cardea
+      POSTGRES_PASSWORD: cardea
+    ports: ["5432:5432"]
+    volumes: ["pg:/var/lib/postgresql/data"]
+
+  gateway:
+    image: ghcr.io/berriai/litellm:main-stable
+    command: ["--config", "/config/config.yaml", "--port", "4000"]
+    environment:
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:-sk-local-dev}
+      DATABASE_URL: postgresql://cardea:cardea@postgres:5432/cardea
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      LITELLM_LOG: ERROR
+    volumes: ["./litellm:/config:ro"]
+    ports: ["4000:4000"]
+    depends_on: [postgres]
+
+volumes:
+  pg: {}

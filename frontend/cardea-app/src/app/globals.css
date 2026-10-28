@@ -1,0 +1,27 @@
+@import "tailwindcss";
+@import "@fontsource/archivo/400.css";
+@import "@fontsource/archivo/500.css";
+@import "@fontsource/archivo/600.css";
+
+/* Tokens de marca (ADR-001). Los de estado nunca para marca. */
+@theme {
+  --color-cardea-tinta: #12263a;
+  --color-cardea-tinta-2: #1b334a;
+  --color-cardea-tinta-3: #223e57;
+  --color-cardea-petroleo: #0a6f7d;
+  --color-cardea-petroleo-claro: #6ccbd3;
+  --color-cardea-niebla: #eef2f5;
+  --color-cardea-niebla-2: #e6ecf1;
+  --color-cardea-texto: #3b4f63;
+  --color-cardea-texto-suave: #6b7c8c;
+  --color-cardea-linea: #d5dee6;
+  --color-estado-permitida: #2e7d4f;
+  --color-estado-aviso: #c7791a;
+  --color-estado-bloqueada: #b3362b;
+  --font-sans: "Archivo", "Liberation Sans", Arial, sans-serif;
+  --radius-tarjeta: 18px;
+}
+
+html { font-family: var(--font-sans); }
+body { background: var(--color-cardea-niebla); color: var(--color-cardea-tinta); font-variant-numeric: tabular-nums; }
+h1, h2, h3 { font-weight: 600; letter-spacing: -0.02em; }

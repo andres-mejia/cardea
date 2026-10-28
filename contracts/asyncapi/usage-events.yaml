@@ -1,0 +1,19 @@
+asyncapi: 3.0.0
+info:
+  title: Cardea usage events
+  version: 0.1.0
+  description: Eventos de uso y de tool calls que emite el data plane y consume usage-ingest. Sin contenido.
+channels:
+  usage:
+    address: cardea.usage.v1
+    messages:
+      UsageEvent:
+        payload:
+          $ref: ../openapi/control-plane.yaml#/components/schemas/UsageEvent
+operations:
+  publishUsage:
+    action: send
+    channel: { $ref: "#/channels/usage" }
+  consumeUsage:
+    action: receive
+    channel: { $ref: "#/channels/usage" }

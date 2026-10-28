@@ -1,0 +1,2 @@
+aws_profile         = "cardea-dev"
+github_access_token = ""

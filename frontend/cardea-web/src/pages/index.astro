@@ -1,0 +1,157 @@
+---
+import Base from "../layouts/Base.astro";
+import Formulario from "../components/Formulario.astro";
+
+const canales = [
+  { t: "Aplicaciones por API", d: "Pasan por el gateway. Reglas, límites de gasto y redacción de datos antes de llegar al proveedor.", e: "Controla y registra", ok: true },
+  { t: "CLIs de código", d: "Claude Code, Codex y Copilot con una clave por desarrollador emitida tras el SSO. El tráfico pasa por el mismo gateway.", e: "Controla y registra", ok: true },
+  { t: "Tools MCP remotas", d: "Lo que ejecutan los agentes: servidores aprobados, permiso por equipo y por tool, credenciales guardadas en el gateway y no en el portátil.", e: "Controla y registra", ok: true },
+  { t: "Asientos y chat web", d: "No se pueden enrutar. Se leen las métricas de las consolas de cada proveedor para sumar uso y coste a la misma vista.", e: "Solo registra", ok: false },
+];
+
+const pantallas = [
+  { img: "/img/panel.png", t: "Panel general", d: "El mes de un vistazo y lo que necesita una decisión hoy." },
+  { img: "/img/costes.png", t: "Costes y chargeback", d: "Gasto por equipo y centro de coste, con presupuesto, aviso y bloqueo. Exportable a tu ERP." },
+  { img: "/img/politicas.png", t: "Políticas", d: "Datos personales, modelos permitidos, tools MCP y límites. Se prueban con un texto antes de activarse." },
+  { img: "/img/actividad.png", t: "Actividad y auditoría", d: "Cada petición y cada tool call con su decisión y su recorrido. El texto original no se almacena." },
+];
+
+const fuera = [
+  "Chat web fuera del SSO corporativo y control de las completions inline de Copilot: solo métricas agregadas.",
+  "Servidores MCP locales y tools internas de cada CLI: no pasan por ningún gateway; se limitan con configuración gestionada en el puesto.",
+  "Seguridad ofensiva de agentes: inyección de prompts, tools envenenadas, sandbox. Para eso hay fabricantes de seguridad.",
+  "Alojamiento de modelos, workspace de chat para empleados y gestión de APIs. Cardea es solo gobierno.",
+];
+---
+<Base title="Cardea · Gobierno del uso de IA">
+  <section class="hero">
+    <div class="wrap">
+      <p class="kicker">Gobierno del uso de IA</p>
+      <h1>Quién usa qué modelo, cuánto cuesta y qué datos salen de la empresa, en una sola vista.</h1>
+      <p class="lead">Un punto de control para las aplicaciones, los CLIs de código y las tools que ejecutan los agentes, con el coste repartido por equipo y un informe que un auditor puede leer. Instalado en tu infraestructura: los prompts no salen de tu red y no se almacenan.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="#demo">Pedir una demo</a>
+        <a class="btn btn-ghost" href="#alcance">Qué cubre y qué no</a>
+      </div>
+      <figure class="shot">
+        <img src="/img/panel.png" width="2120" height="1208" alt="Panel general de Cardea con el gasto del mes, el reparto por canal y lo que requiere atención" loading="eager" />
+        <figcaption><span class="ilustrativo">Datos ilustrativos</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section alt" id="problema">
+    <div class="wrap">
+      <p class="kicker">El problema</p>
+      <h2>Tres canales de uso y ninguna vista común</h2>
+      <div class="grid grid-3" style="margin-top:36px">
+        <div class="card"><h3>Finanzas no puede responder</h3><p>¿Cuánto gasta cada equipo y en qué? Cada proveedor factura aparte y nadie lo reparte por centro de coste.</p></div>
+        <div class="card"><h3>Seguridad no puede responder</h3><p>¿Qué datos de clientes han salido, y qué ha ejecutado un agente en nombre de quién?</p></div>
+        <div class="card"><h3>Dirección técnica no puede responder</h3><p>¿Quién usa qué herramienta y qué modelo? Hay una consola distinta por herramienta y ninguna las suma.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="que-hace">
+    <div class="wrap">
+      <p class="kicker">Qué hace</p>
+      <h2>Un punto de control para API, CLIs y tools MCP, y visibilidad sobre los asientos</h2>
+      <div class="grid grid-4" style="margin-top:36px">
+        {canales.map((c) => (
+          <div class="canal" data-ok={c.ok}>
+            <h3>{c.t}</h3>
+            <p>{c.d}</p>
+            <span class={`chip ${c.ok ? "info" : "mute"}`}>{c.e}</span>
+          </div>
+        ))}
+      </div>
+      <div class="grid grid-3 ventajas">
+        <div><b>El coste, en el idioma de Finanzas</b><p>Centro de coste, presupuesto por equipo con aviso y bloqueo, y una exportación de chargeback.</p></div>
+        <div><b>Los datos personales no salen</b><p>DNI, IBAN, correos y nombres se sustituyen por marcadores antes de llegar al proveedor. El original no se guarda.</p></div>
+        <div><b>Un informe que dice lo que no cubre</b><p>Evidencias por periodo para auditoría, con la cobertura declarada control por control.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section alt" id="pantallas">
+    <div class="wrap">
+      <p class="kicker">Pantallas</p>
+      <h2>Hecho para que lo lean Finanzas, Seguridad y Cumplimiento, no solo Plataforma</h2>
+      <div class="grid grid-2" style="margin-top:36px">
+        {pantallas.map((p) => (
+          <figure class="pant">
+            <img src={p.img} width="2120" height="1208" alt={`Pantalla de ${p.t}`} loading="lazy" />
+            <figcaption><h3>{p.t}</h3><p>{p.d}</p></figcaption>
+          </figure>
+        ))}
+      </div>
+      <p style="margin-top:18px"><span class="ilustrativo">Datos ilustrativos</span></p>
+    </div>
+  </section>
+
+  <section class="section" id="alcance">
+    <div class="wrap">
+      <p class="kicker">Alcance</p>
+      <h2>Lo que Cardea no cubre, dicho antes de que lo preguntes</h2>
+      <p class="lead">Preferimos que lo sepas en la primera reunión y no en la auditoría.</p>
+      <ul class="fuera">
+        {fuera.map((f) => <li>{f}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section dark" id="instalacion">
+    <div class="wrap grid grid-2" style="align-items:center;gap:48px">
+      <div>
+        <p class="kicker">Instalación</p>
+        <h2>En tu red, con tu identidad</h2>
+        <p class="lead">El gateway y el motor de políticas corren en tu infraestructura: un chart de Helm en tu Kubernetes o en tu cuenta de AWS. Los prompts no pasan por servidores nuestros. Tu Entra ID u Okta emite las identidades; cada desarrollador recibe una clave propia válida para todos sus CLIs.</p>
+      </div>
+      <div class="card pasos">
+        <ol>
+          <li><b>Conecta</b> proveedores de modelos, servidores MCP y tu SSO.</li>
+          <li><b>Apunta</b> las aplicaciones y los CLIs al gateway; un cambio de URL y de clave.</li>
+          <li><b>Define</b> presupuestos, datos a redactar, modelos y tools permitidos por equipo.</li>
+          <li><b>Reparte</b> el coste y genera el informe de evidencias cada trimestre.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="demo">
+    <div class="wrap grid grid-2" style="gap:48px;align-items:start">
+      <div>
+        <p class="kicker">Piloto</p>
+        <h2>Pide una demo con tu tráfico real</h2>
+        <p class="lead">Desplegamos el MVP en tu cuenta con tus aplicaciones, tus CLIs y tu proveedor de identidad. Si no responde las tres preguntas en el primer mes, no se factura.</p>
+      </div>
+      <Formulario />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero { padding: clamp(56px, 8vw, 96px) 0 0; overflow: hidden; }
+  .hero h1 { max-width: 920px; }
+  .cta { display: flex; gap: 10px; margin-top: 28px; flex-wrap: wrap; }
+  .shot { margin-top: clamp(40px, 6vw, 72px); background: var(--cardea-niebla); border-radius: var(--radio) var(--radio) 0 0; padding: clamp(14px, 3vw, 36px) clamp(14px, 3vw, 36px) 0; }
+  .shot img { border-radius: var(--radio) var(--radio) 0 0; box-shadow: 0 30px 60px -30px rgba(18,38,58,.45); }
+  .shot figcaption { padding: 10px 0 14px; }
+  .canal { border-top: 3px solid var(--cardea-petroleo); padding-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .canal[data-ok="false"] { border-top-color: #9fb0bf; }
+  .canal p { font-size: 15px; flex: 1; }
+  .canal .chip { align-self: flex-start; }
+  .ventajas { margin-top: 48px; padding-top: 36px; border-top: 1px solid var(--cardea-linea); }
+  .ventajas b { display: block; font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+  .ventajas p { font-size: 15px; }
+  .pant img { border-radius: var(--radio); box-shadow: 0 0 0 1px var(--cardea-linea), 0 24px 48px -28px rgba(18,38,58,.4); }
+  .pant figcaption { padding: 16px 4px 0; }
+  .pant figcaption p { font-size: 14.5px; margin-top: 4px; }
+  .fuera { list-style: none; margin-top: 32px; max-width: 760px; }
+  .fuera li { padding: 16px 0 16px 28px; border-bottom: 1px solid var(--cardea-linea); position: relative; color: var(--cardea-texto); }
+  .fuera li::before { content: ""; position: absolute; left: 4px; top: 25px; width: 10px; height: 10px; border-radius: 3px; background: var(--estado-aviso); }
+  .pasos ol { list-style: none; counter-reset: p; display: flex; flex-direction: column; gap: 14px; }
+  .pasos li { counter-increment: p; display: flex; gap: 14px; align-items: baseline; color: #cfe4e8; font-size: 15.5px; }
+  .pasos li::before { content: counter(p); flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--cardea-petroleo); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; }
+  .pasos b { color: #fff; }
+</style>

@@ -1,0 +1,21 @@
+---
+import Marca from "./Marca.astro";
+---
+<footer class="pie">
+  <div class="wrap row">
+    <div><Marca size={24} /><p>Gobierno del uso de IA. Instalado en tu infraestructura.</p></div>
+    <nav aria-label="Legal">
+      <a href="/legal/privacidad">Privacidad</a>
+      <a href="/legal/aviso-legal">Aviso legal</a>
+      <a href="mailto:hola@cardea.ai">hola@cardea.ai</a>
+    </nav>
+  </div>
+  <div class="wrap copy">© 2026 Cardea. Las pantallas y cifras de esta web son ilustrativas. Cardea es una marca en proceso de registro.</div>
+</footer>
+<style>
+  .pie { border-top: 1px solid var(--cardea-linea); padding: 40px 0 28px; }
+  .row { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+  .row p { font-size: 14px; margin-top: 10px; }
+  nav { display: flex; gap: 20px; font-size: 14px; color: var(--cardea-texto); }
+  .copy { font-size: 12.5px; color: var(--cardea-texto-suave); margin-top: 28px; }
+</style>

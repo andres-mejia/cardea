@@ -1,0 +1,30 @@
+# Node
+node_modules/
+.pnpm-store/
+dist/
+.next/
+.astro/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+
+# Java
+target/
+.mvn/wrapper/*.jar
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+
+# Pitch
+docs/pitch/pitch.html
+docs/pitch/__pycache__/
+
+# Local
+.DS_Store
+*.log

@@ -1,0 +1,28 @@
+---
+import Marca from "./Marca.astro";
+const appUrl = import.meta.env.PUBLIC_APP_URL ?? "https://app.cardea.ai";
+---
+<header class="hdr">
+  <div class="wrap row">
+    <Marca size={30} />
+    <nav aria-label="Secciones">
+      <a href="#que-hace">Qué hace</a>
+      <a href="#pantallas">Pantallas</a>
+      <a href="#alcance">Alcance</a>
+      <a href="#instalacion">Instalación</a>
+    </nav>
+    <div class="acciones">
+      <a class="btn btn-ghost" href={appUrl}>Entrar</a>
+      <a class="btn btn-primary" href="#demo">Pedir una demo</a>
+    </div>
+  </div>
+</header>
+<style>
+  .hdr { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,.86); backdrop-filter: blur(10px); border-bottom: 1px solid var(--cardea-linea); }
+  .row { display: flex; align-items: center; gap: 28px; height: 68px; }
+  nav { display: flex; gap: 22px; font-size: 14.5px; color: var(--cardea-texto); margin-left: 12px; }
+  nav a:hover { color: var(--cardea-tinta); }
+  .acciones { margin-left: auto; display: flex; gap: 8px; }
+  .acciones .btn { padding: 10px 18px; font-size: 14px; }
+  @media (max-width: 820px) { nav { display: none; } .acciones .btn-ghost { display: none; } }
+</style>

@@ -1,0 +1,19 @@
+name: attribution · sin coautoría de IA
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  attribution:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Self-test del guardarraíl
+        run: scripts/check-ai-attribution.sh --self-test
+      - name: Commits del PR
+        run: scripts/check-ai-attribution.sh --commits "origin/${{ github.base_ref }}..HEAD"
+      - name: Cuerpo del PR
+        env: { BODY: "${{ github.event.pull_request.body }}" }
+        run: printf '%s' "$BODY" > /tmp/pr-body.txt && scripts/check-ai-attribution.sh --text /tmp/pr-body.txt

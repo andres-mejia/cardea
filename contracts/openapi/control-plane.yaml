@@ -1,0 +1,103 @@
+openapi: 3.1.0
+info:
+  title: Cardea control plane
+  version: 0.1.0
+  description: |
+    Contrato del control plane del MVP. Esqueleto: define los recursos y sus formas; cada servicio
+    completará sus operaciones en su propio fichero (policy-service.yaml, identity-service.yaml, ...)
+    y este índice referenciará los esquemas comunes. Contract-first: este fichero cambia antes que el código.
+servers:
+  - url: https://api.cardea.ai/v1
+    description: Control plane gestionado (dev y pilotos)
+  - url: http://cardea-control.cardea.svc/v1
+    description: Control plane en el chart de Helm
+tags:
+  - name: policies
+  - name: teams
+  - name: developer-keys
+  - name: mcp-servers
+  - name: usage
+  - name: budgets
+  - name: evidence
+  - name: connections
+paths: {}
+components:
+  securitySchemes:
+    oidc:
+      type: openIdConnect
+      openIdConnectUrl: https://auth.cardea.ai/.well-known/openid-configuration
+  schemas:
+    Team:
+      type: object
+      required: [id, name, costCenter]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        costCenter: { type: string, description: "Código del centro de coste del ERP, p. ej. CC-1040" }
+    Budget:
+      type: object
+      required: [teamId, period, limitMicroEur, action]
+      properties:
+        teamId: { type: string, format: uuid }
+        period: { type: string, enum: [monthly] }
+        limitMicroEur: { type: integer, format: int64, description: "Límite en microeuros. Nunca decimales en coma flotante." }
+        warnAtPercent: { type: integer, minimum: 1, maximum: 100, default: 80 }
+        action: { type: string, enum: [warn, block] }
+    DeveloperKey:
+      type: object
+      required: [id, userId, teamId, issuedAt, expiresAt, status]
+      properties:
+        id: { type: string }
+        userId: { type: string }
+        teamId: { type: string, format: uuid }
+        issuedAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+        lastUsedAt: { type: string, format: date-time }
+        status: { type: string, enum: [active, expiring, revoked, unused] }
+    McpServer:
+      type: object
+      required: [id, name, url, teams, tools]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        url: { type: string, format: uri }
+        teams: { type: array, items: { type: string, format: uuid } }
+        tools:
+          type: array
+          description: Tools permitidas; vacío significa ninguna.
+          items: { type: string }
+    Policy:
+      type: object
+      required: [id, name, kind, scope, action, status]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        kind: { type: string, enum: [pii, allowed-models, allowed-tools, budget, confidential-code, region] }
+        scope:
+          type: object
+          properties:
+            teams: { type: array, items: { type: string, format: uuid } }
+            channels: { type: array, items: { type: string, enum: [api, cli, mcp] } }
+        action: { type: string, enum: [redact, allow-list, warn, block] }
+        status: { type: string, enum: [active, testing, draft] }
+    UsageEvent:
+      type: object
+      description: Evento emitido por el data plane. Nunca lleva contenido del prompt ni de la respuesta ni argumentos de tools.
+      required: [id, occurredAt, kind, principal, teamId, channel, decision]
+      properties:
+        id: { type: string }
+        occurredAt: { type: string, format: date-time }
+        kind: { type: string, enum: [completion, tool-call] }
+        principal: { type: string, description: "Usuario o aplicación" }
+        teamId: { type: string, format: uuid }
+        channel: { type: string, enum: [api, cli, mcp, seat] }
+        provider: { type: string }
+        model: { type: string }
+        tool: { type: string, description: "server.tool, solo en tool-call" }
+        inputTokens: { type: integer }
+        outputTokens: { type: integer }
+        costMicroEur: { type: integer, format: int64 }
+        latencyMs: { type: integer }
+        decision: { type: string, enum: [allowed, redacted, warned, blocked] }
+        policyId: { type: string, format: uuid }
+        redactedEntities: { type: array, items: { type: string, enum: [dni, iban, email, phone, name] } }
