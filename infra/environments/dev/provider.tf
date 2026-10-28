@@ -1,7 +1,7 @@
 variable "aws_profile" {
-  description = "Perfil AWS local. Vacío en CI (credenciales OIDC por entorno)."
+  description = "Perfil AWS local (SSO de la cuenta compartida con Fenora: `aws sso login --profile fintrack-dev`). Vacío en CI (credenciales OIDC por entorno)."
   type        = string
-  default     = "cardea-dev"
+  default     = "fintrack-dev"
 }
 
 locals {

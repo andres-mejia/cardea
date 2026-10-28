@@ -1,2 +1,2 @@
-aws_profile         = "cardea-dev"
+aws_profile         = "fintrack-dev"
 github_access_token = ""
