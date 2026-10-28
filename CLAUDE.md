@@ -17,6 +17,10 @@ Adaptador de `AGENTS.md`: dice cómo se ejecuta aquí con Claude Code y no añad
 - Parada obligatoria antes de push o PR: rama, ficheros, mensaje y validaciones; se espera el OK.
 - Si algo falla, se para y se reporta; no se stashea ni se descarta nada.
 
+## Spec Kit
+
+El MVP se construye por specs (`specs/NNN-nombre/spec.md`, ya escritas) con las skills `/speckit-*` de `.claude/skills`. Una spec es una rama `NNN-nombre` y un PR. Orden, dependencias, reglas de la cuenta AWS compartida con Fenora y el prompt de arranque: `docs/CONTINUAR-EN-CLAUDE-CODE.md`. La constitución de Spec Kit (`.specify/memory/constitution.md`) deriva de `AGENTS.md`; si chocan, gana `AGENTS.md`.
+
 ## Comandos
 
 ```bash

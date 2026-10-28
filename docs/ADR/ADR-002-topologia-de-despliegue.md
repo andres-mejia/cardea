@@ -19,7 +19,7 @@ Separar por plano:
 | Control plane | políticas, identidad, claves, presupuestos, ingesta, evidencias | Un Quarkus por Lambda tras API Gateway, Aurora, S3, SQS | Los mismos Quarkus como contenedores, Postgres y almacenamiento S3-compatible del cliente |
 | Data plane | gateway LLM, gateway MCP, motor de políticas | **ECS Fargate**, 2 tareas tras un ALB | Deployment en el chart de Helm |
 
-Quarkus es lo que permite la doble vida del control plane: el mismo módulo se construye con `quarkus-amazon-lambda-http` para Lambda y como imagen JVM o nativa para Kubernetes. El código de dominio y los puertos no cambian; cambian los adaptadores (`SQS` o `HTTP` para la ingesta, `S3` o `MinIO` para informes, `Cognito` o `OIDC genérico` para identidad).
+La doble vida del control plane se consigue como en Fenora: cada servicio Quarkus es un servidor HTTP normal empaquetado en una imagen OCI con AWS Lambda Web Adapter (`public.ecr.aws/awsguru/aws-lambda-adapter`), publicada en ECR. Lambda la ejecuta a través del adaptador; Kubernetes la ejecuta tal cual. Una sola imagen, ningún módulo específico de Lambda en el código. El dominio y los puertos no cambian; cambian los adaptadores (`SQS` o `HTTP` para la ingesta, `S3` o `MinIO` para informes, `Cognito` o `OIDC genérico` para identidad).
 
 El data plane no va a Lambda en ningún caso:
 
@@ -44,7 +44,7 @@ Almacenamiento de eventos: solo Postgres (Aurora Serverless v2) en el MVP, con p
 
 ## Consecuencias
 
-- Hay dos formas de empaquetar cada servicio Quarkus desde el primer día; el pipeline construye las dos y la de contenedor se prueba en `docker compose` aunque no se despliegue.
+- Una sola imagen por servicio; el pipeline la publica en ECR y `docker compose` la arranca sin el adaptador para probar el modo contenedor aunque no se despliegue en Kubernetes todavía.
 - Fargate cuesta dinero aunque nadie lo use: dos tareas pequeñas rondan los 30–40 € al mes. El entorno dev escala a cero por la noche con una regla programada.
 - La infraestructura de la landing y del panel se copia del patrón de Fenora y se adapta; la del data plane es nueva (`infra/modules/dataplane`).
 - Los adaptadores "AWS" y "Kubernetes" tienen que seguir siendo intercambiables: una dependencia nueva de un servicio de AWS en el dominio o en la aplicación es una regresión.

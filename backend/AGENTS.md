@@ -3,7 +3,7 @@
 Reglas de trabajo del área. Lo que existe va a `openspec/specs/`.
 
 - Java 21 + Quarkus, hexagonal: `domain/` sin dependencias de framework, `application/` con los casos de uso y los puertos, `adapter/in/{rest,lambda,sqs}` y `adapter/out/{postgres,s3,cognito,oidc,http}`.
-- Cada servicio compila de dos formas desde el mismo módulo: `-Plambda` (quarkus-amazon-lambda-http, para `infra/modules/lambda`) y `-Pcontainer` (imagen JVM, para `deploy/helm`). Un PR que rompa una de las dos no se fusiona.
+- Cada servicio es un servidor HTTP Quarkus empaquetado en una imagen OCI con AWS Lambda Web Adapter (mismo `Dockerfile` que los servicios de Fenora: `provided:al2023` + Corretto 21 + `runner.jar`). La misma imagen corre en Lambda (`infra/modules/lambda`, vía ECR) y en Kubernetes (`deploy/helm`). Un PR que rompa uno de los dos modos no se fusiona.
 - Un servicio por capacidad, no por tabla. Previstos para el MVP:
   - `policy-service`: reglas (datos personales, modelos, tools MCP, presupuestos) y su evaluación; publica la configuración que lee el data plane.
   - `identity-service`: equipos, usuarios, claves de desarrollador (emisión tras SSO, revocación, caducidad), servidores MCP aprobados.
