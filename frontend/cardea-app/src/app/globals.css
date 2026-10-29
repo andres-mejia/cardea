@@ -92,3 +92,7 @@ button.chip.line:hover { box-shadow: inset 0 0 0 1px #0a6f7d; color: #0a6f7d; }
 .dev { background: #fff; border-radius: 18px; padding: 13px 14px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; min-width: 0; }
 .mono { font-family: ui-monospace, "DejaVu Sans Mono", monospace; }
 .fila { cursor: pointer; } .fila:hover { background: #f7fafb; }
+
+/* Tailwind 4 deja los botones con el cursor por defecto: se recupera la mano. */
+button:not(:disabled), [role="button"]:not([aria-disabled="true"]), [role="switch"], [role="tab"], summary, label[for] { cursor: pointer; }
+button:disabled { cursor: not-allowed; }

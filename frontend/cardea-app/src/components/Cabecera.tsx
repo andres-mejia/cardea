@@ -1,7 +1,12 @@
-import { Avatar, Icono } from "./graficos";
+"use client";
+
+import { FotoUsuario } from "./FotoUsuario";
+import { Icono } from "./graficos";
+import { useUsuario } from "@/lib/auth/usuario-contexto";
 
 /** Barra superior del pitch. La etiqueta avisa de que las cifras son ilustrativas (AGENTS.md §3). */
 export function Cabecera({ titulo, subtitulo }: { titulo: string; subtitulo?: string }) {
+  const usuario = useUsuario();
   return (
     <div className="tb">
       <div>
@@ -29,7 +34,7 @@ export function Cabecera({ titulo, subtitulo }: { titulo: string; subtitulo?: st
         <Icono n="bell" size={14} />
         <span className="dot">3</span>
       </button>
-      <Avatar i={0} size={31} />
+      <FotoUsuario foto={usuario?.foto} nombre={usuario?.nombre} size={31} />
     </div>
   );
 }
