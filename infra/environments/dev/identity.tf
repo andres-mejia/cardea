@@ -21,7 +21,7 @@ module "cognito" {
   environment          = var.environment
   domain_prefix        = "cardea-${var.environment}"
   callback_urls        = ["${local.panel_url}/", "http://localhost:3000/"]
-  logout_urls          = ["${local.panel_url}/", "http://localhost:3000/"]
+  logout_urls          = ["${local.panel_url}/login", "http://localhost:3000/login"]
   google_client_id     = local.google_oauth.client_id
   google_client_secret = local.google_oauth.client_secret
 }

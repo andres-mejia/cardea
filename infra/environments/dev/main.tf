@@ -56,7 +56,7 @@ module "panel" {
   environment_variables = {
     NEXT_PUBLIC_COGNITO_DOMAIN       = module.cognito.hosted_ui_domain
     NEXT_PUBLIC_COGNITO_CLIENT_ID    = module.cognito.app_client_id
-    NEXT_PUBLIC_COGNITO_REDIRECT_URI = "${local.panel_url}/"
+    NEXT_PUBLIC_COGNITO_USER_POOL_ID = module.cognito.user_pool_id
     NEXT_PUBLIC_API_URL              = module.api_gateway.api_endpoint
   }
 }
