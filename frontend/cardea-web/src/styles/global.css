@@ -1,4 +1,4 @@
-/* Cardea · tokens de marca (ADR-001). Solo estos; los de estado nunca para marca. */
+/* Cardea · tokens de marca (ADR-001). Solo estos y sus derivados; los de estado nunca para marca. */
 @import "@fontsource/archivo/400.css";
 @import "@fontsource/archivo/500.css";
 @import "@fontsource/archivo/600.css";
@@ -8,40 +8,56 @@
   --cardea-tinta: #12263a;
   --cardea-petroleo: #0a6f7d;
   --cardea-petroleo-claro: #6ccbd3;
-  --cardea-niebla: #f3f6f8;
-  --cardea-niebla-2: #e6ecf1;
+  --cardea-niebla: #eef2f5;
+  --cardea-niebla-2: #e2e9ee;
   --cardea-texto: #3b4f63;
-  --cardea-texto-suave: #5d6e7e; /* AA sobre blanco y niebla */
-  --cardea-linea: #d9e0e6;
+  --cardea-texto-suave: #586a7b; /* AA sobre blanco y niebla */
+  --cardea-linea: #d5dde4;
   /* Derivados para fondos de tinta: texto secundario, línea y superficie. */
+  --cardea-tinta-2: #183149;
   --cardea-sobre-tinta: #cfe4e8;
+  --cardea-sobre-tinta-suave: #9fbcc6;
   --cardea-linea-tinta: #2c4660;
   --cardea-petroleo-hover: #085c68;
   --cardea-borde-campo: #7d8e9d; /* 3:1 sobre blanco y niebla */
   --cardea-sombra: 0 24px 48px -28px rgba(18, 38, 58, .42);
+  --cardea-sombra-flota: 0 18px 40px -22px rgba(18, 38, 58, .38), 0 2px 6px -2px rgba(18, 38, 58, .12);
 
+  /* Estado: solo para decisiones (permitida, redactada/aviso, bloqueada) y validación. */
   --estado-permitida: #2e7d4f;
   --estado-aviso: #c7791a;
   --estado-bloqueada: #b3362b;
 
+  /* Movimiento */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --t-press: 120ms;
+  --t-hover: 180ms;
+  --t-ui: 240ms;
+  --t-reveal: 380ms;
+
   --radio: 22px;
   --radio-s: 12px;
-  --ancho: 1120px;
+  --ancho: 1180px;
   --gutter: 24px;
 }
+@media (max-width: 560px) { :root { --gutter: 16px; } }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; scrollbar-color: #a9b7c3 transparent; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 body {
   font-family: "Archivo", "Liberation Sans", Arial, sans-serif;
   color: var(--cardea-tinta);
   background: #ffffff;
   line-height: 1.5;
   font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  caret-color: var(--cardea-petroleo);
 }
 h1, h2, h3 { font-weight: 600; letter-spacing: -0.02em; line-height: 1.12; text-wrap: balance; }
-h1 { font-size: clamp(36px, 5.2vw, 60px); }
-h2 { font-size: clamp(26px, 3.4vw, 38px); }
+h1 { font-size: clamp(36px, 5.2vw, 64px); }
+h2 { font-size: clamp(28px, 3.4vw, 40px); }
 h3 { font-size: 19px; }
 p { color: var(--cardea-texto); text-wrap: pretty; }
 a { color: inherit; text-decoration: none; }
@@ -49,38 +65,61 @@ a { color: inherit; text-decoration: none; }
 
 /* Foco visible en todo lo navegable con teclado; en fondo de tinta, petróleo claro. */
 :focus-visible { outline: 2px solid var(--cardea-petroleo); outline-offset: 3px; border-radius: 6px; }
-.section.dark :focus-visible { outline-color: var(--cardea-petroleo-claro); }
+.on-dark :focus-visible, .section.dark :focus-visible { outline-color: var(--cardea-petroleo-claro); }
 img { max-width: 100%; height: auto; display: block; }
 
 .wrap { width: min(100% - 2 * var(--gutter), var(--ancho)); margin-inline: auto; }
-section[id] { scroll-margin-top: 80px; }
-.section { padding: clamp(56px, 8vw, 104px) 0; }
+section[id] { scroll-margin-top: 84px; }
+.section { padding: clamp(64px, 9vw, 128px) 0; }
 .section.alt { background: var(--cardea-niebla); }
 .section.dark { background: var(--cardea-tinta); color: #ffffff; }
 .section.dark p { color: var(--cardea-sobre-tinta); }
 .lead { font-size: clamp(17px, 1.6vw, 20px); line-height: 1.55; max-width: 62ch; margin-top: 18px; }
 
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.skip { position: absolute; left: 16px; top: -60px; z-index: 50; background: var(--cardea-tinta); color: #fff; padding: 10px 16px; border-radius: 8px; font-weight: 500; transition: top var(--t-ui) var(--ease-out); }
+.skip:focus-visible { top: 12px; outline-color: var(--cardea-petroleo-claro); }
+
 .btn {
-  display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 13px 22px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 999px; padding: 13px 22px;
   min-height: 48px; font-size: 15px; font-weight: 500; border: 0; cursor: pointer; font-family: inherit; white-space: nowrap;
-  transition: transform .12s ease, background .15s ease;
+  transition: transform var(--t-press) var(--ease-out), background-color var(--t-hover) ease, box-shadow var(--t-hover) ease, color var(--t-hover) ease;
 }
-.btn:active { transform: translateY(1px); }
+.btn:active { transform: translateY(1px) scale(.985); }
 .btn-primary { background: var(--cardea-petroleo); color: #ffffff; }
 .btn-primary:hover { background: var(--cardea-petroleo-hover); }
 .btn:disabled { opacity: .6; cursor: progress; }
+.btn-ghost { background: transparent; color: var(--cardea-petroleo); box-shadow: inset 0 0 0 1.5px var(--cardea-petroleo); } /* taste-skill-ignore: botón secundario con contorno */
 .btn-ghost:hover { background: var(--cardea-niebla); }
-.btn-ghost { background: transparent; color: var(--cardea-petroleo); box-shadow: inset 0 0 0 1.5px var(--cardea-petroleo); }
-.section.dark .btn-ghost { color: var(--cardea-petroleo-claro); box-shadow: inset 0 0 0 1.5px var(--cardea-petroleo-claro); }
+.section.dark .btn-ghost { color: var(--cardea-petroleo-claro); box-shadow: inset 0 0 0 1.5px var(--cardea-petroleo-claro); } /* taste-skill-ignore: idem */
+.btn .flecha { transition: transform var(--t-hover) var(--ease-out); }
+.btn:hover .flecha { transform: translateX(3px); }
 
 /* Marca de datos ilustrativos: neutra; el ámbar es un color de estado y no se usa para esto. */
-.ilustrativo { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: var(--cardea-texto); background: #ffffff; box-shadow: inset 0 0 0 1px var(--cardea-linea); border-radius: 6px; padding: 3px 9px; }
+.ilustrativo { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: var(--cardea-texto); background: rgba(18, 38, 58, .06); border-radius: 6px; padding: 3px 9px; white-space: nowrap; }
 .ilustrativo::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--cardea-texto-suave); }
+.on-dark .ilustrativo { color: var(--cardea-sobre-tinta); background: rgba(255, 255, 255, .09); }
+.on-dark .ilustrativo::before { background: var(--cardea-sobre-tinta-suave); }
 
-/* Páginas legales: títulos de sección más contenidos y listas visibles. */
-.legal h2 { font-size: 22px; margin-top: 36px; }
+/* Aparición al hacer scroll: solo con script y sin movimiento reducido; el contenido es visible por defecto. */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  html[data-io] [data-reveal]:not(.is-in) { opacity: 0; transform: translateY(14px); }
+  html[data-io] [data-reveal] {
+    transition: opacity var(--t-reveal) var(--ease-out), transform var(--t-reveal) var(--ease-out);
+    transition-delay: calc(var(--i, 0) * 60ms);
+  }
+}
+
+/* Transiciones entre páginas (ClientRouter): fundido corto. */
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 220ms; }
+
+/* Páginas legales. */
+.legal h2 { font-size: 22px; margin-top: 40px; }
 .legal p, .legal ul { margin-top: 12px; }
 .legal ul { padding-left: 20px; list-style: disc; }
-.legal li + li { margin-top: 6px; }
-.legal a { text-decoration: underline; }
-
+.legal li { color: var(--cardea-texto); }
+.legal li + li { margin-top: 8px; }
+.legal a { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; color: var(--cardea-petroleo); }
+.legal a:hover { text-decoration-thickness: 2px; }
+.legal code { font-size: .92em; background: var(--cardea-niebla); padding: 1px 6px; border-radius: 4px; }
+.legal strong { color: var(--cardea-tinta); font-weight: 600; }

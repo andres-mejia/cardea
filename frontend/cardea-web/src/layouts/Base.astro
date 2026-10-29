@@ -1,37 +1,107 @@
 ---
 import "../styles/global.css";
+import { ClientRouter } from "astro:transitions";
 import Header from "../components/Header.astro";
 import Pie from "../components/Pie.astro";
+import { t, path, type Lang, type RouteKey } from "../i18n";
+import { SITE, HREFLANG } from "../i18n/routes.mjs";
 
-interface Props { title: string; description?: string; noindex?: boolean }
-const {
-  title,
-  description = "Cardea gobierna el uso de IA en tu empresa: quién usa qué modelo, qué tools ejecuta, qué datos salen y cuánto cuesta por equipo. Instalado en tu infraestructura.",
-  noindex = false,
-} = Astro.props;
-const site = Astro.site ?? new URL("https://cardea.tekhos.com");
-const canonical = new URL(Astro.url.pathname, site).toString();
+interface Props { lang: Lang; route: RouteKey; title: string; description: string }
+const { lang, route, title, description } = Astro.props;
+const d = t(lang);
+const abs = (p: string) => new URL(p, SITE).toString();
+const canonical = abs(path(route, lang));
+const alternates = (["es", "en"] as const).map((l) => ({ hreflang: HREFLANG[l], href: abs(path(route, l)) }));
+const ogImage = abs(d.meta.ogImage);
+const otherOgLocale = lang === "es" ? "en_GB" : "es_ES";
+
+const org = { "@type": "Organization", "@id": "https://tekhos.com/#organization", name: "Tekhos", url: "https://tekhos.com", email: "cardea@tekhos.com" };
+const website = {
+  "@type": "WebSite",
+  "@id": `${SITE}/#website`,
+  url: abs("/"),
+  name: "Cardea",
+  inLanguage: [HREFLANG.es, HREFLANG.en],
+  publisher: { "@id": org["@id"] },
+};
+const app = {
+  "@type": "SoftwareApplication",
+  "@id": `${SITE}/#cardea`,
+  name: "Cardea",
+  url: abs(path("home", lang)),
+  description: d.meta.home.description,
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web, Kubernetes",
+  inLanguage: HREFLANG[lang],
+  image: ogImage,
+  publisher: { "@id": org["@id"] },
+  creator: { "@id": org["@id"] },
+};
+const page = { "@type": "WebPage", "@id": `${canonical}#webpage`, url: canonical, name: title, description, inLanguage: HREFLANG[lang], isPartOf: { "@id": website["@id"] }, ...(route === "home" ? { about: { "@id": app["@id"] } } : {}) };
+const jsonLd = JSON.stringify({ "@context": "https://schema.org", "@graph": [org, website, app, page] }).replace(/</g, "\\u003c");
 ---
 <!doctype html>
-<html lang="es">
+<html lang={lang}>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    {alternates.map((a) => <link rel="alternate" hreflang={a.hreflang} href={a.href} />)}
+    <link rel="alternate" hreflang="x-default" href={abs(path(route, "es"))} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#12263A" />
+    <meta name="color-scheme" content="light" />
+    <meta name="author" content="Tekhos" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Cardea" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={new URL("/img/og.png", site).toString()} />
-    <meta name="theme-color" content="#12263A" />
-    {noindex && <meta name="robots" content="noindex" />}
+    <meta property="og:locale" content={d.ogLocale} />
+    <meta property="og:locale:alternate" content={otherOgLocale} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={d.meta.ogAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={d.meta.ogAlt} />
+
+    <script type="application/ld+json" set:html={jsonLd} />
+    <ClientRouter />
   </head>
   <body>
-    <Header />
-    <main><slot /></main>
-    <Pie />
+    <a class="skip" href="#contenido">{d.ui.skip}</a>
+    <Header lang={lang} route={route} />
+    <main id="contenido" tabindex="-1"><slot /></main>
+    <Pie lang={lang} />
   </body>
 </html>
+
+<script>
+  // Aparición al hacer scroll: una vez por elemento. Sin IntersectionObserver o con movimiento reducido, todo queda visible.
+  let io: IntersectionObserver | undefined;
+  function revelar() {
+    io?.disconnect();
+    const els = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
+    if (!("IntersectionObserver" in window) || matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      els.forEach((el) => el.classList.add("is-in"));
+      return;
+    }
+    io = new IntersectionObserver((entries) => {
+      for (const e of entries) if (e.isIntersecting) { e.target.classList.add("is-in"); io?.unobserve(e.target); }
+    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
+    els.forEach((el) => io!.observe(el));
+    document.documentElement.dataset.io = "";
+  }
+  document.addEventListener("astro:page-load", revelar);
+</script>

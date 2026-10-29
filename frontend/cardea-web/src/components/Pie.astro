@@ -1,24 +1,35 @@
 ---
 import Marca from "./Marca.astro";
+import { t, path, type Lang } from "../i18n";
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const d = t(lang);
+const legal = (["privacy", "terms", "notice", "cookies"] as const).map((k) => ({ href: path(k, lang), t: d.footer.links[k] }));
 ---
 <footer class="pie">
   <div class="wrap row">
-    <div><Marca size={24} /><p>Gobierno del uso de IA. Instalado en tu infraestructura.</p></div>
-    <nav aria-label="Legal">
-      <a href="/legal/privacidad">Privacidad</a>
-      <a href="/legal/aviso-legal">Aviso legal</a>
-      <a href="/legal/terminos">Términos</a>
+    <div class="firma">
+      <Marca size={26} href={path("home", lang)} label={d.ui.home} />
+      <p>{d.footer.tagline}</p>
+    </div>
+    <nav aria-label={d.footer.legal}>
+      {legal.map((l) => <a href={l.href}>{l.t}</a>)}
       <a href="mailto:cardea@tekhos.com">cardea@tekhos.com</a>
     </nav>
   </div>
-  <div class="wrap copy">© 2026 Cardea. Las pantallas y cifras de esta web son ilustrativas. Cardea es una marca en proceso de registro.</div>
+  <div class="wrap base">
+    <p class="titular">{d.footer.owner}</p>
+    <p>{d.footer.note}</p>
+  </div>
 </footer>
 <style>
-  .pie { border-top: 1px solid var(--cardea-linea); padding: 40px 0 28px; }
-  .row { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
-  .row p { font-size: 14px; margin-top: 12px; }
-  nav { display: flex; flex-wrap: wrap; gap: 0 8px; margin-inline: -10px; font-size: 14.5px; color: var(--cardea-texto); }
-  nav a { padding: 10px; white-space: nowrap; border-radius: 8px; }
-  nav a:hover { color: var(--cardea-tinta); text-decoration: underline; text-underline-offset: 3px; }
-  .copy { font-size: 12.5px; color: var(--cardea-texto-suave); margin-top: 28px; }
+  .pie { background: var(--cardea-niebla); padding: 48px 0 32px; }
+  .row { display: flex; justify-content: space-between; gap: 24px 40px; flex-wrap: wrap; align-items: flex-start; }
+  .firma p { font-size: 15px; margin-top: 14px; max-width: 36ch; }
+  nav { display: flex; flex-wrap: wrap; gap: 0 4px; margin-inline: -10px; font-size: 15px; color: var(--cardea-texto); }
+  nav a { padding: 10px; white-space: nowrap; border-radius: 8px; text-underline-offset: 4px; }
+  nav a:hover { color: var(--cardea-tinta); text-decoration: underline; }
+  .base { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 24px; margin-top: 28px; }
+  .base p { font-size: 13px; color: var(--cardea-texto-suave); }
+  .base .titular { color: var(--cardea-tinta); font-weight: 500; }
 </style>
