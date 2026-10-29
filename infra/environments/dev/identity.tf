@@ -4,6 +4,9 @@ module "cognito" {
   domain_prefix = "cardea-${var.environment}"
   callback_urls = ["${local.panel_url}/", "http://localhost:3000/"]
   logout_urls   = ["${local.panel_url}/", "http://localhost:3000/"]
+
+  # Creado por CLI desde el JSON del proyecto GCP cardea-513108 (infra/README.md).
+  google_oauth_secret_name = "cardea/${var.environment}/google-oauth"
 }
 
 module "api_gateway" {
