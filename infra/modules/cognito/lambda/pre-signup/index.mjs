@@ -3,6 +3,7 @@
 
 import {
   AdminLinkProviderForUserCommand,
+  AdminUpdateUserAttributesCommand,
   CognitoIdentityProviderClient,
   ListUsersCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
@@ -25,6 +26,11 @@ const directorio = {
         SourceUser: { ProviderName: proveedor, ProviderAttributeName: "Cognito_Subject", ProviderAttributeValue: sujeto },
         DestinationUser: { ProviderName: "Cognito", ProviderAttributeValue: destino },
       }),
+    );
+  },
+  async ponerFoto(userPoolId, destino, url) {
+    await cognito.send(
+      new AdminUpdateUserAttributesCommand({ UserPoolId: userPoolId, Username: destino, UserAttributes: [{ Name: "picture", Value: url }] }),
     );
   },
 };

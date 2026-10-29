@@ -16,6 +16,7 @@ const log = (msg, meta = {}) => console.log(JSON.stringify({ msg, ...meta }));
 /**
  * @param directorio.buscarPorEmail(userPoolId, email) -> [{ username, enabled, status }]
  * @param directorio.enlazar(userPoolId, proveedor, sujeto, destino)
+ * @param directorio.ponerFoto(userPoolId, destino, url)  opcional
  */
 export function crearHandler({ directorio }) {
   return async (event) => {
@@ -49,6 +50,13 @@ export function crearHandler({ directorio }) {
 
     await directorio.enlazar(userPoolId, proveedor, sujeto, candidatos[0].username);
     log("enlazado", { proveedor, destino: candidatos[0].username });
+
+    // Cognito no copia los atributos del IdP a un usuario enlazado: la foto de Google se
+    // escribe aquí, al enlazar. Si falla, se entra igual sin foto.
+    const foto = String(attrs.picture ?? "");
+    if (foto.startsWith("https://") && directorio.ponerFoto) {
+      await directorio.ponerFoto(userPoolId, candidatos[0].username, foto).catch(() => log("foto_no_guardada", { proveedor }));
+    }
     return event;
   };
 }
