@@ -53,7 +53,9 @@ jobs:
       - name: Publicar en Amplify
         run: |
           set -euo pipefail
-          APP_ID="$(aws amplify list-apps --query "apps[?name=='${APP_NAME}'].appId | [0]" --output text)"
+          # La CLI pagina list-apps y aplica la query por página: se toma la primera línea no vacía.
+          APP_ID="$(aws amplify list-apps --query "apps[?name=='${APP_NAME}'].appId" --output text | awk 'NF && $1 != "None" {print $1; exit}')"
+          test -n "${APP_ID}"
           (cd frontend/cardea-web/dist && zip -qr "${RUNNER_TEMP}/landing.zip" .)
           DESPLIEGUE="$(aws amplify create-deployment --app-id "${APP_ID}" --branch-name main --output json)"
           JOB="$(echo "${DESPLIEGUE}" | jq -r .jobId)"
