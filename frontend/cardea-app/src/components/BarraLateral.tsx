@@ -35,7 +35,7 @@ export function BarraLateral({ usuario }: { usuario: Usuario }) {
       <div className="me">
         <FotoUsuario foto={usuario.foto} nombre={usuario.nombre} size={30} />
         <div className="min-w-0">
-          <b className="truncate" title={usuario.email}>{usuario.nombre}</b>
+          <b title={usuario.email}>{usuario.nombre}</b>
           <span>{ROL[usuario.rol]}</span>
         </div>
         <button type="button" onClick={() => void salir()} aria-label="Salir" title="Salir" className="ml-auto rounded-full p-1 text-[#8EA3B5] hover:bg-cardea-tinta-3 hover:text-white">

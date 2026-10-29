@@ -20,7 +20,7 @@ function Semanas({ semanas, grupos }: { semanas: { etiqueta: string; total: numb
       {[0, 2000, 4000].map((g) => (
         <g key={g}>
           <line x1={34} y1={y(g)} x2={w} y2={y(g)} stroke="#EEF2F5" strokeWidth={1} />
-          <text x={28} y={y(g) + 3} textAnchor="end" style={{ fontSize: 8.5, fill: "#7A8A99" }}>{g / 1000}k</text>
+          <text x={28} y={y(g) + 3} textAnchor="end" style={{ fontSize: 8.5, fill: "#5F7183" }}>{g / 1000}k</text>
         </g>
       ))}
       {semanas.map((s, i) => {
@@ -35,7 +35,7 @@ function Semanas({ semanas, grupos }: { semanas: { etiqueta: string; total: numb
           <g key={s.etiqueta}>
             {rects}
             <text x={x + 23} y={cima - 5} textAnchor="middle" style={{ fontSize: 9.5, fontWeight: 600, fill: "#12263A" }}>{eur(s.total)}</text>
-            <text x={x + 23} y={base + 15} textAnchor="middle" style={{ fontSize: 9.5, fill: "#6B7C8C" }}>{s.etiqueta}</text>
+            <text x={x + 23} y={base + 15} textAnchor="middle" style={{ fontSize: 9.5, fill: "#5F7183" }}>{s.etiqueta}</text>
           </g>
         );
       })}
@@ -93,7 +93,7 @@ export default function Costes() {
           <div style={{ display: "flex", justifyContent: "center", margin: "2px 0 10px" }}>
             <Donut segs={d.modelos.map((m, i): [number, string] => [m.valor, COLORES_MODELO[i] ?? "#C9D8E2"])} size={112} thick={16}>
               <div className="num" style={{ fontSize: 14 }}>{eur(d.total)}</div>
-              <div style={{ fontSize: 8.5, color: "#6B7C8C" }}>total</div>
+              <div style={{ fontSize: 8.5, color: "#5F7183" }}>total</div>
             </Donut>
           </div>
           {d.modelos.map((m, i) => (
@@ -101,7 +101,7 @@ export default function Costes() {
           ))}
         </div>
       </div>
-      <div className="r2" style={{ flex: 1 }}>
+      <div className="r2">
         {grupos.map((g) => {
           const pct = Math.round((g.gastado / g.presupuesto) * 100);
           return (
@@ -110,7 +110,7 @@ export default function Costes() {
                 <div className="num" style={{ fontSize: 15 }}>{pct} %</div>
               </Anillo>
               <div style={{ fontSize: 11, fontWeight: 600, marginTop: 8 }}>{g.nombre}</div>
-              <div style={{ fontSize: 9.6, color: "#6B7C8C", marginTop: 2 }}>{eur(g.gastado)} de {eur(g.presupuesto)}</div>
+              <div style={{ fontSize: 9.6, color: "#5F7183", marginTop: 2 }}>{eur(g.gastado)} de {eur(g.presupuesto)}</div>
               <span className="chip mute mono" style={{ marginTop: 7, fontSize: 8.8 }}>{g.centro}</span>
             </div>
           );

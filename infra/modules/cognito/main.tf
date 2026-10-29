@@ -133,7 +133,7 @@ resource "aws_iam_role_policy" "pre_signup" {
       {
         Sid      = "EnlazarConUsuarioExistente"
         Effect   = "Allow"
-        Action   = ["cognito-idp:ListUsers", "cognito-idp:AdminLinkProviderForUser"]
+        Action   = ["cognito-idp:ListUsers", "cognito-idp:AdminLinkProviderForUser", "cognito-idp:AdminUpdateUserAttributes"]
         Resource = local.pools_arn
       },
       {

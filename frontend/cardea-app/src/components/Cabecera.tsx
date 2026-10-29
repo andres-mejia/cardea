@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { FotoUsuario } from "./FotoUsuario";
 import { Icono } from "./graficos";
 import { useUsuario } from "@/lib/auth/usuario-contexto";
@@ -21,19 +23,19 @@ export function Cabecera({ titulo, subtitulo }: { titulo: string; subtitulo?: st
         Buscar o ejecutar
         <span className="kbd">Ctrl K</span>
       </div>
-      <button type="button" aria-label="Crear" className="ib pri">
+      <Link href="/politicas" aria-label="Crear regla" title="Crear regla" className="ib pri">
         <Icono n="plus" size={15} sw={2.2} />
-      </button>
-      <button type="button" aria-label="Claves" className="ib">
+      </Link>
+      <Link href="/desarrolladores" aria-label="Claves" title="Claves" className="ib">
         <Icono n="key" size={14} />
-      </button>
-      <button type="button" aria-label="Descargas" className="ib">
+      </Link>
+      <Link href="/evidencias" aria-label="Informes" title="Informes" className="ib">
         <Icono n="down" size={14} />
-      </button>
-      <button type="button" aria-label="Avisos" className="ib">
+      </Link>
+      <Link href="/" aria-label="Avisos: 3 pendientes" title="Avisos" className="ib">
         <Icono n="bell" size={14} />
         <span className="dot">3</span>
-      </button>
+      </Link>
       <FotoUsuario foto={usuario?.foto} nombre={usuario?.nombre} size={31} />
     </div>
   );

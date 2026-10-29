@@ -6,6 +6,7 @@ import { crearHandler, SIN_ACCESO } from "./enlace.mjs";
 // Directorio en memoria: lo que se prueba es la decisión, no el SDK.
 function entorno(usuarios) {
   const enlaces = [];
+  const fotos = [];
   const directorio = {
     async buscarPorEmail(_pool, email) {
       return usuarios.filter((u) => u.email === email);
@@ -13,8 +14,11 @@ function entorno(usuarios) {
     async enlazar(pool, proveedor, sujeto, destino) {
       enlaces.push({ pool, proveedor, sujeto, destino });
     },
+    async ponerFoto(pool, destino, url) {
+      fotos.push({ pool, destino, url });
+    },
   };
-  return { enlaces, handler: crearHandler({ directorio }) };
+  return { enlaces, fotos, handler: crearHandler({ directorio }) };
 }
 
 const desdeGoogle = (email, verificado = "true") => ({
@@ -84,4 +88,19 @@ test("otras fuentes (alta por administrador) pasan sin tocar", async () => {
   const ev = { ...desdeGoogle("x@y.example"), triggerSource: "PreSignUp_AdminCreateUser" };
   assert.equal(await handler(ev), ev);
   assert.equal(enlaces.length, 0);
+});
+
+test("al enlazar, la foto de Google se guarda en el usuario", async () => {
+  const { fotos, handler } = entorno([piloto]);
+  const ev = desdeGoogle(piloto.email);
+  ev.request.userAttributes.picture = "https://lh3.googleusercontent.com/a/foto";
+  await handler(ev);
+  assert.deepEqual(fotos, [{ pool: "eu-west-1_prueba", destino: "uuid-lucia", url: "https://lh3.googleusercontent.com/a/foto" }]);
+});
+
+test("sin foto de Google no se toca el usuario", async () => {
+  const { fotos, enlaces, handler } = entorno([piloto]);
+  await handler(desdeGoogle(piloto.email));
+  assert.equal(enlaces.length, 1);
+  assert.equal(fotos.length, 0);
 });

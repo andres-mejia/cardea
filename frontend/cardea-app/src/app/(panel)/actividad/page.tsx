@@ -69,16 +69,16 @@ function Detalle({ p }: { p: Peticion }) {
       </div>
       {p.decision === "Redactada" ? (
         <div className="quote" style={{ marginTop: 11 }}>
-          <div style={{ fontSize: 9.3, color: "#6B7C8C", marginBottom: 3 }}>Texto enviado al proveedor</div>
+          <div style={{ fontSize: 9.3, color: "#5F7183", marginBottom: 3 }}>Texto enviado al proveedor</div>
           Resume la reclamación de <span className="redact">NOMBRE</span> con DNI <span className="redact">DNI</span> y cuenta <span className="redact">IBAN</span> sobre el siniestro de hogar del 3 de septiembre.
         </div>
       ) : (
         <div className="quote" style={{ marginTop: 11 }}>
-          <div style={{ fontSize: 9.3, color: "#6B7C8C", marginBottom: 3 }}>Metadatos registrados</div>
+          <div style={{ fontSize: 9.3, color: "#5F7183", marginBottom: 3 }}>Metadatos registrados</div>
           {p.herramienta} · {p.destino} · decisión {p.decision.toLowerCase()}
         </div>
       )}
-      <div style={{ fontSize: 9.6, color: "#6B7C8C", marginTop: 8 }}>El texto original no se almacena.</div>
+      <div style={{ fontSize: 9.6, color: "#5F7183", marginTop: 8 }}>El texto original no se almacena.</div>
     </div>
   );
 }
@@ -129,11 +129,11 @@ export default function Actividad() {
                 )}
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <b style={{ fontWeight: 600 }}>{p.quien}</b>
-                  <div style={{ fontSize: 9.3, color: "#6B7C8C" }}>{p.herramienta}, {p.destino}</div>
+                  <div style={{ fontSize: 9.3, color: "#5F7183" }}>{p.herramienta}, {p.destino}</div>
                 </div>
                 <span className="num" style={{ fontSize: 10.3 }}>{p.coste}</span>
                 <span className={`chip ${p.tono}`}>{p.decision}</span>
-                <span style={{ fontSize: 9.3, color: "#7A8A99", fontVariantNumeric: "tabular-nums" }}>{p.hora}</span>
+                <span style={{ fontSize: 9.3, color: "#5F7183", fontVariantNumeric: "tabular-nums" }}>{p.hora}</span>
               </div>
             );
           })}
