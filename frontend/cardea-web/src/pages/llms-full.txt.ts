@@ -22,7 +22,10 @@ function idioma(lang: Lang): string {
   out.push("", `## ${d.screens.title}`, "", `(${d.ui.illustrative})`, "");
   for (const s of d.screens.items) out.push(`- ${s.t} — ${s.q} ${s.d}`);
   out.push("", `## ${d.scope.title}`, "", d.scope.lead, "");
-  for (const s of d.scope.items) out.push(`- ${s.t}: ${s.d}`);
+  out.push(`### ${d.scope.core.title}`, "");
+  for (const s of d.scope.core.items) out.push(`- ${s.t}: ${s.d}`);
+  out.push("", `### ${d.scope.edge.title}`, "");
+  for (const s of d.scope.edge.items) out.push(`- ${s.t} (${s.who}): ${s.d}`);
   out.push("", `## ${d.install.title}`, "", d.install.lead, "");
   d.install.steps.forEach((s, i) => out.push(`${i + 1}. ${s.v} ${s.d}`));
   out.push("", `## ${d.demo.title}`, "", d.demo.lead, `${url(path("home", lang))}#demo`, "");

@@ -15,6 +15,7 @@ const en: Dict = {
   },
   ui: {
     skip: "Skip to content",
+    top: "Back to top",
     home: "Cardea, home",
     nav: "Sections",
     sections: { what: "Product", screens: "Screens", scope: "Scope", install: "Deployment" },
@@ -32,7 +33,7 @@ const en: Dict = {
     lead:
       "One control point for your applications, coding CLIs and the tools your agents call, with spend allocated to each team and a report an auditor can actually read. It runs in your infrastructure: prompts never leave your network and are never stored.",
     primary: "Book a demo",
-    secondary: "What it covers, and what it doesn’t",
+    secondary: "Where it fits",
   },
   flow: {
     label: "How a request flows through Cardea",
@@ -112,14 +113,26 @@ const en: Dict = {
     alt: "{t} screen in the Cardea console: {d}",
   },
   scope: {
-    title: "What Cardea doesn’t cover, before you have to ask",
-    lead: "We’d rather you hear it in the first meeting than in the audit.",
-    items: [
-      { t: "Web chat outside corporate SSO, and control over Copilot’s inline completions", d: "Aggregate metrics only." },
-      { t: "Local MCP servers and each CLI’s built-in tools", d: "They don’t go through any gateway; you limit them with managed configuration on the device." },
-      { t: "Offensive agent security", d: "Prompt injection, poisoned tools, sandboxing. Security vendors exist for that." },
-      { t: "Model hosting, an employee chat workspace and API management", d: "Cardea does governance only." },
-    ],
+    title: "AI governance that doesn’t step on what already works",
+    lead: "Cardea owns four things and relies on the tools your company already runs for everything else. We show you where that line sits in the first meeting, not in the audit.",
+    core: {
+      title: "What Cardea governs",
+      items: [
+        { t: "Policies", d: "Data, models and tools checked before a request leaves." },
+        { t: "Identity", d: "One key per person, issued after your SSO." },
+        { t: "Cost", d: "Spend by team and project, with chargeback to your ERP." },
+        { t: "Evidence", d: "A report per period that states its coverage control by control." },
+      ],
+    },
+    edge: {
+      title: "And what it leaves to your existing tools",
+      items: [
+        { who: "Your MDM", t: "Local MCP servers and each CLI’s built-in tools", d: "They never touch the network, so managed device configuration keeps them in bounds." },
+        { who: "Your security vendor", t: "Offensive agent security", d: "Prompt injection, poisoned tools and sandboxing. Cardea works alongside it, not instead of it." },
+        { who: "Your providers and API gateway", t: "Model hosting, employee chat and API management", d: "Cardea sits in front of them to govern them, not in their place." },
+        { who: "Each provider’s console", t: "Web chat outside SSO and Copilot’s inline completions", d: "Cardea collects their aggregate metrics; per-request control isn’t possible." },
+      ],
+    },
   },
   install: {
     title: "On your network, with your identity",

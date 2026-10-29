@@ -16,6 +16,7 @@ const es = {
   },
   ui: {
     skip: "Saltar al contenido",
+    top: "Volver arriba",
     home: "Cardea, inicio",
     nav: "Secciones",
     sections: { what: "Qué hace", screens: "Pantallas", scope: "Alcance", install: "Instalación" },
@@ -33,7 +34,7 @@ const es = {
     lead:
       "Un punto de control para las aplicaciones, los CLIs de código y las tools que ejecutan los agentes, con el coste repartido por equipo y un informe que un auditor puede leer. Instalado en tu infraestructura: los prompts no salen de tu red y no se almacenan.",
     primary: "Pedir una demo",
-    secondary: "Qué cubre y qué no",
+    secondary: "Dónde encaja",
   },
   flow: {
     label: "Cómo pasa una petición por Cardea",
@@ -114,14 +115,26 @@ const es = {
     alt: "Pantalla de {t} del panel de Cardea: {d}",
   },
   scope: {
-    title: "Lo que Cardea no cubre, dicho antes de que lo preguntes",
-    lead: "Preferimos que lo sepas en la primera reunión y no en la auditoría.",
-    items: [
-      { t: "Chat web fuera del SSO corporativo y control de las completions inline de Copilot", d: "Solo métricas agregadas." },
-      { t: "Servidores MCP locales y tools internas de cada CLI", d: "No pasan por ningún gateway; se limitan con configuración gestionada en el puesto." },
-      { t: "Seguridad ofensiva de agentes", d: "Inyección de prompts, tools envenenadas, sandbox. Para eso hay fabricantes de seguridad." },
-      { t: "Alojamiento de modelos, workspace de chat para empleados y gestión de APIs", d: "Cardea es solo gobierno." },
-    ],
+    title: "Gobierna la IA sin pisar lo que ya funciona",
+    lead: "Cardea se ocupa de cuatro cosas y para el resto se apoya en las herramientas que tu empresa ya usa. Te lo enseñamos en la primera reunión, no en la auditoría.",
+    core: {
+      title: "Lo que gobierna Cardea",
+      items: [
+        { t: "Políticas", d: "Datos, modelos y tools comprobados antes de que la petición salga." },
+        { t: "Identidad", d: "Una clave por persona, emitida tras tu SSO." },
+        { t: "Coste", d: "Gasto por equipo y proyecto, con chargeback a tu ERP." },
+        { t: "Evidencias", d: "Un informe por periodo con la cobertura declarada control a control." },
+      ],
+    },
+    edge: {
+      title: "Y lo que deja en manos de tus herramientas",
+      items: [
+        { who: "Tu MDM", t: "Servidores MCP locales y tools internas de cada CLI", d: "No pasan por la red: se acotan con la configuración gestionada del puesto." },
+        { who: "Tu proveedor de seguridad", t: "Seguridad ofensiva de agentes", d: "Inyección de prompts, tools envenenadas y sandbox. Cardea convive con él, no lo sustituye." },
+        { who: "Tus proveedores y tu API gateway", t: "Alojamiento de modelos, chat para empleados y gestión de APIs", d: "Cardea se pone delante para gobernarlos, no en su lugar." },
+        { who: "La consola de cada proveedor", t: "Chat web fuera del SSO y completions inline de Copilot", d: "Cardea recoge sus métricas agregadas; el control petición a petición no es posible." },
+      ],
+    },
   },
   install: {
     title: "En tu red, con tu identidad",

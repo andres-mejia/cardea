@@ -110,6 +110,22 @@ section[id] { scroll-margin-top: 84px; }
   }
 }
 
+/* Volver arriba: flotante abajo a la derecha, fuera del orden de tabulación mientras está oculto. */
+.arriba {
+  position: fixed; right: max(var(--gutter), env(safe-area-inset-right)); bottom: max(24px, env(safe-area-inset-bottom)); z-index: 40;
+  width: 48px; height: 48px; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  color: #ffffff; background: var(--cardea-tinta); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22), var(--cardea-sombra-flota); /* taste-skill-ignore: se separa del fondo en secciones oscuras */
+  opacity: 0; visibility: hidden; transform: translateY(12px);
+  transition: opacity var(--t-ui) var(--ease-out), transform var(--t-ui) var(--ease-out), visibility 0s linear var(--t-ui), background-color var(--t-hover) var(--ease-out);
+}
+.arriba.visible { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+.arriba:hover { background: var(--cardea-petroleo); }
+.arriba:hover svg { transform: translateY(-2px); }
+.arriba svg { transition: transform var(--t-hover) var(--ease-out); }
+.arriba:active { transform: scale(.94); transition-duration: var(--t-press); }
+.arriba:focus-visible { outline: 2px solid var(--cardea-petroleo); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .arriba, .arriba svg { transition: opacity var(--t-ui) linear, visibility 0s linear var(--t-ui); transform: none; } .arriba.visible { transition-delay: 0s; } }
+
 /* Transiciones entre páginas (ClientRouter): fundido corto. */
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 220ms; }
 
