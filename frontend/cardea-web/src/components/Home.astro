@@ -79,16 +79,33 @@ const d = t(lang);
   </section>
 
   <section class="section" id="alcance" aria-labelledby="alcance-t">
-    <div class="wrap partido">
-      <div data-reveal>
+    <div class="wrap">
+      <div class="encaje-cabecera" data-reveal>
         <h2 id="alcance-t">{d.scope.title}</h2>
         <p class="lead">{d.scope.lead}</p>
       </div>
-      <ul class="fuera">
-        {d.scope.items.map((f, i) => (
-          <li data-reveal style={`--i:${i}`}><h3>{f.t}</h3><p>{f.d}</p></li>
-        ))}
-      </ul>
+      <div class="encaje">
+        <div class="nucleo" data-reveal>
+          <h3 class="encaje-t">{d.scope.core.title}</h3>
+          <ol>
+            {d.scope.core.items.map((c, i) => (
+              <li><span class="num" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span><div><b>{c.t}</b><p>{c.d}</p></div></li>
+            ))}
+          </ol>
+        </div>
+        <div class="aliados">
+          <h3 class="encaje-t">{d.scope.edge.title}</h3>
+          <ul>
+            {d.scope.edge.items.map((a, i) => (
+              <li data-reveal style={`--i:${i + 1}`}>
+                <span class="quien">{a.who}</span>
+                <h4>{a.t}</h4>
+                <p>{a.d}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -168,12 +185,39 @@ const d = t(lang);
   .ventajas p { font-size: 15.5px; margin-top: 8px; }
   @media (max-width: 800px) { .ventajas { grid-template-columns: 1fr; } }
 
-  /* Alcance */
-  .fuera { list-style: none; display: flex; flex-direction: column; }
-  .fuera li { padding: 22px 0; box-shadow: 0 -1px 0 var(--cardea-linea); } /* taste-skill-ignore: separa cláusulas de alcance */
-  .fuera li:last-child { box-shadow: 0 -1px 0 var(--cardea-linea), 0 1px 0 var(--cardea-linea); } /* taste-skill-ignore: idem */
-  .fuera h3 { font-size: 17px; line-height: 1.35; letter-spacing: -0.01em; }
-  .fuera p { margin-top: 6px; }
+  /* Alcance: un núcleo que Cardea gobierna, unido a las herramientas del cliente en las que se apoya. */
+  .encaje-cabecera { max-width: 760px; }
+  .encaje { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 0 56px; margin-top: clamp(40px, 5vw, 64px); align-items: stretch; }
+  .encaje-t { font-size: 14px; font-weight: 600; letter-spacing: 0; line-height: 1.4; }
+  .nucleo { position: relative; z-index: 1; background: var(--cardea-tinta); color: #ffffff; border-radius: var(--radio); padding: clamp(24px, 3vw, 36px); box-shadow: var(--cardea-sombra); }
+  .nucleo .encaje-t { color: var(--cardea-petroleo-claro); }
+  .nucleo ol { list-style: none; margin-top: 20px; display: flex; flex-direction: column; }
+  .nucleo li { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; padding: 18px 0; box-shadow: 0 -1px 0 var(--cardea-linea-tinta); } /* taste-skill-ignore: separa los cuatro ámbitos */
+  .nucleo .num { font-size: 13px; font-weight: 600; color: var(--cardea-petroleo-claro); padding-top: 4px; }
+  .nucleo b { font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+  .nucleo p { color: var(--cardea-sobre-tinta); font-size: 15.5px; margin-top: 4px; }
+  .aliados { display: flex; flex-direction: column; }
+  .aliados .encaje-t { color: var(--cardea-texto); }
+  .aliados ul { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 20px; flex: 1; grid-auto-rows: 1fr; }
+  .aliados li { position: relative; border: 1.5px dashed var(--cardea-borde-campo); border-radius: 16px; padding: 22px; transition: border-color var(--t-hover) var(--ease-out), background-color var(--t-hover) var(--ease-out); }
+  .aliados li:hover { border-color: var(--cardea-petroleo); background: var(--cardea-niebla); }
+  .quien { display: inline-block; font-size: 13px; font-weight: 600; color: var(--cardea-petroleo); background: rgba(10, 111, 125, .08); border-radius: 6px; padding: 3px 9px; }
+  .aliados h4 { font-size: 16.5px; font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; margin-top: 14px; }
+  .aliados p { font-size: 15px; margin-top: 6px; }
+  /* Conectores del núcleo a las tarjetas de la columna que lo toca: solo en escritorio. */
+  @media (min-width: 1001px) {
+    .aliados li:nth-child(odd)::before { content: ""; position: absolute; right: 100%; top: 34px; width: 58px; height: 2px; background: var(--cardea-petroleo-claro); transform-origin: left; }
+    .aliados li:nth-child(odd)::after { content: ""; position: absolute; right: calc(100% + 50px); top: 31px; width: 8px; height: 8px; border-radius: 50%; background: var(--cardea-petroleo); opacity: 0; }
+  }
+  @media (min-width: 1001px) and (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+    html[data-io] .aliados li:nth-child(odd)::before { transform: scaleX(0); transition: transform 520ms var(--ease-out) calc(var(--i, 0) * 120ms + 240ms); }
+    html[data-io] .aliados li.is-in:nth-child(odd)::before { transform: scaleX(1); }
+    html[data-io] .aliados li.is-in:nth-child(odd)::after { animation: pulso 4.8s var(--ease-in-out) 0.9s infinite; }
+    html[data-io] .aliados li.is-in:nth-child(3)::after { animation-delay: 3.3s; }
+  }
+  @keyframes pulso { 0% { opacity: 0; transform: translateX(0); } 6% { opacity: 1; } 22% { opacity: 1; transform: translateX(50px); } 28%, 100% { opacity: 0; transform: translateX(50px); } }
+  @media (max-width: 1000px) { .encaje { grid-template-columns: 1fr; gap: 40px; } }
+  @media (max-width: 640px) { .aliados ul { grid-template-columns: 1fr; } }
 
   /* Instalación: cuatro pasos en orden, unidos por una línea. */
   .pasos { list-style: none; display: flex; flex-direction: column; }
