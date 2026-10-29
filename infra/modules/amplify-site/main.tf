@@ -62,7 +62,7 @@ resource "aws_amplify_app" "this" {
               commands:
                 - corepack enable
                 - corepack prepare pnpm@${var.pnpm_version} --activate
-                - pnpm install --frozen-lockfile
+                - cd ../.. && pnpm install --frozen-lockfile && cd ${var.app_root}
             build:
               commands:
                 - pnpm run build
@@ -72,6 +72,7 @@ resource "aws_amplify_app" "this" {
               - '**/*'
           cache:
             paths:
+              - ../../node_modules/**/*
               - node_modules/**/*
   EOT
 
