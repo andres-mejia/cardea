@@ -35,9 +35,10 @@ export default function PanelLayout({ children }: { children: ReactNode }) {
 
   return (
     <UsuarioContexto.Provider value={sesion.usuario}>
+      <a href="#contenido" className="saltar">Saltar al contenido</a>
       <div className="app">
         <BarraLateral usuario={sesion.usuario} />
-        <main className="mainw">{children}</main>
+        <main id="contenido" tabIndex={-1} className="mainw">{children}</main>
       </div>
     </UsuarioContexto.Provider>
   );

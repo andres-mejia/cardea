@@ -25,7 +25,7 @@ const canonical = new URL(Astro.url.pathname, site).toString();
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={new URL("/img/panel.png", site).toString()} />
+    <meta property="og:image" content={new URL("/img/og.png", site).toString()} />
     <meta name="theme-color" content="#12263A" />
     {noindex && <meta name="robots" content="noindex" />}
   </head>

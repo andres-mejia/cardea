@@ -2,13 +2,11 @@
 
 import Link from "next/link";
 
-import { FotoUsuario } from "./FotoUsuario";
+import { Buscador } from "./Buscador";
 import { Icono } from "./graficos";
-import { useUsuario } from "@/lib/auth/usuario-contexto";
 
 /** Barra superior del pitch. La etiqueta avisa de que las cifras son ilustrativas (AGENTS.md §3). */
 export function Cabecera({ titulo, subtitulo }: { titulo: string; subtitulo?: string }) {
-  const usuario = useUsuario();
   return (
     <div className="tb">
       <div>
@@ -18,11 +16,7 @@ export function Cabecera({ titulo, subtitulo }: { titulo: string; subtitulo?: st
       <span className="chip ilustrativo ml-3" title="Las cifras de esta pantalla son de demostración">
         Datos ilustrativos
       </span>
-      <div className="srch">
-        <Icono n="search" size={12} />
-        Buscar o ejecutar
-        <span className="kbd">Ctrl K</span>
-      </div>
+      <Buscador />
       <Link href="/politicas" aria-label="Crear regla" title="Crear regla" className="ib pri">
         <Icono n="plus" size={15} sw={2.2} />
       </Link>
@@ -36,7 +30,6 @@ export function Cabecera({ titulo, subtitulo }: { titulo: string; subtitulo?: st
         <Icono n="bell" size={14} />
         <span className="dot">3</span>
       </Link>
-      <FotoUsuario foto={usuario?.foto} nombre={usuario?.nombre} size={31} />
     </div>
   );
 }

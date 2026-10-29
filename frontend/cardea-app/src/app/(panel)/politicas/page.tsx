@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { Cabecera, Cargando } from "@/components/Cabecera";
-import { Icono, miles, type NombreIcono, Segmentos } from "@/components/graficos";
+import { filaPulsable, Icono, miles, type NombreIcono, Segmentos } from "@/components/graficos";
 import type { DatosDe } from "@/lib/demo/datos";
 import { redactar } from "@/lib/demo/redaccion";
 import { usePantalla } from "@/lib/demo/use-pantalla";
@@ -84,7 +84,7 @@ export default function Politicas() {
             return (
               <div
                 key={r.id}
-                onClick={() => setSel(r.id)}
+                {...filaPulsable(elegida, () => setSel(r.id))}
                 className="fila"
                 style={{ background: elegida ? "#F1F8F9" : "#F4F7F9", boxShadow: elegida ? "inset 0 0 0 1.5px #0A6F7D" : undefined, borderRadius: 14, padding: "9px 12px", display: "flex", alignItems: "center", gap: 10, marginBottom: 7 }}
               >
@@ -111,6 +111,7 @@ export default function Politicas() {
                     e.stopPropagation();
                     alternar(r.id);
                   }}
+                  onKeyDown={(e) => e.stopPropagation()}
                 />
               </div>
             );

@@ -6,7 +6,7 @@ import { type FormEvent, useState, useSyncExternalStore } from "react";
 import { Isotipo } from "@/components/Isotipo";
 import { COGNITO, esModoEjemplo } from "@/lib/auth/config";
 import { mensajeDeRetorno } from "@/lib/auth/oauth-retorno";
-import { entrar, entrarConGoogle } from "@/lib/auth/sesion";
+import { entrar, entrarConGoogle, fijarContrasena, mensajeDeError } from "@/lib/auth/sesion";
 
 const sinSuscripcion = () => () => {};
 
@@ -32,6 +32,8 @@ export default function Login() {
   const [contrasena, setContrasena] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
+  const [pideNueva, setPideNueva] = useState(false);
+  const [nueva, setNueva] = useState("");
   const conGoogle = !esModoEjemplo() && !!COGNITO.domain;
 
   // Error del retorno de Google (lo deja aquí el layout del panel). Se lee de la URL en el
@@ -58,10 +60,16 @@ export default function Login() {
     setOcupado(true);
     setError(null);
     try {
-      await entrar(email, contrasena);
-      router.replace("/");
+      if (pideNueva) {
+        await fijarContrasena(nueva);
+        router.replace("/");
+      } else if ((await entrar(email, contrasena)) === "nueva_contrasena") {
+        setPideNueva(true);
+      } else {
+        router.replace("/");
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se ha podido iniciar sesión");
+      setError(mensajeDeError(e));
     } finally {
       setOcupado(false);
     }
@@ -85,8 +93,18 @@ export default function Login() {
 
       <section className="flex items-center justify-center p-8">
         <form onSubmit={onSubmit} className="w-full max-w-sm rounded-tarjeta bg-white p-7">
-          <h2 className="text-[22px]">Entrar</h2>
-          <p className="mt-1 text-[13px] text-cardea-texto-suave">Con tu cuenta de empresa.</p>
+          <h2 className="text-[22px]">{pideNueva ? "Elige tu contraseña" : "Entrar"}</h2>
+          <p className="mt-1 text-[13px] text-cardea-texto-suave">
+            {pideNueva ? "Es tu primera vez: sustituye la contraseña temporal que te dio tu administrador." : "Con tu cuenta de empresa."}
+          </p>
+          {pideNueva ? (
+            <label className="mt-6 block text-[13px] font-semibold">
+              Contraseña nueva
+              <input type="password" required autoComplete="new-password" minLength={12} value={nueva} onChange={(e) => setNueva(e.target.value)} aria-describedby="politica" className={CAMPO} />
+              <span id="politica" className="mt-1.5 block text-[12px] font-normal text-cardea-texto-suave">Al menos 12 caracteres, con mayúsculas, minúsculas, números y símbolos.</span>
+            </label>
+          ) : (
+          <>
           <label className="mt-6 block text-[13px] font-semibold">
             Email
             <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={CAMPO} />
@@ -95,15 +113,17 @@ export default function Login() {
             Contraseña
             <input type="password" required autoComplete="current-password" value={contrasena} onChange={(e) => setContrasena(e.target.value)} className={CAMPO} />
           </label>
+          </>
+          )}
           {aviso && (
             <p role="alert" className="mt-3 rounded-[10px] bg-estado-bloqueada/10 p-3 text-[13px] text-estado-bloqueada">
               {aviso}
             </p>
           )}
           <button type="submit" disabled={ocupado} className="mt-6 w-full rounded-full bg-cardea-tinta py-2.5 text-[14px] text-white hover:bg-cardea-tinta-2 disabled:opacity-60">
-            {ocupado ? "Entrando…" : "Entrar"}
+            {ocupado ? "Entrando…" : pideNueva ? "Guardar y entrar" : "Entrar"}
           </button>
-          {conGoogle && (
+          {conGoogle && !pideNueva && (
             <>
               <div className="my-4 flex items-center gap-3 text-[12px] text-cardea-texto-suave" aria-hidden="true">
                 <span className="h-px flex-1 bg-cardea-linea" />o<span className="h-px flex-1 bg-cardea-linea" />

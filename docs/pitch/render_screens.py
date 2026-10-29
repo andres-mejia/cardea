@@ -1,4 +1,8 @@
-"""Renderiza las pantallas del pitch como PNG para la landing (frontend/cardea-web/public/img)."""
+"""Renderiza las pantallas del pitch como PNG.
+
+La landing ya no usa estas imágenes: las suyas (public/img/*.webp) son capturas del panel real
+en modo de ejemplo, para que coincidan con lo que se ve al entrar.
+"""
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 

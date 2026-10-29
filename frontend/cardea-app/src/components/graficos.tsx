@@ -142,3 +142,19 @@ export function Segmentos<T extends string>({ opciones, valor, onChange }: { opc
     </div>
   );
 }
+
+/** Props para que una fila seleccionable funcione también con teclado (Enter o espacio). */
+export function filaPulsable(activa: boolean, elegir: () => void) {
+  return {
+    role: "button" as const,
+    tabIndex: 0,
+    "aria-pressed": activa,
+    onClick: elegir,
+    onKeyDown: (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        elegir();
+      }
+    },
+  };
+}

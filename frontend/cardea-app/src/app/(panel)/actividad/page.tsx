@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { Cabecera, Cargando } from "@/components/Cabecera";
-import { Avatar, BAD, Icono, miles, Segmentos, TEAL } from "@/components/graficos";
+import { Avatar, BAD, filaPulsable, Icono, miles, Segmentos, TEAL } from "@/components/graficos";
 import type { DatosDe } from "@/lib/demo/datos";
 import { usePantalla } from "@/lib/demo/use-pantalla";
 
@@ -118,7 +118,7 @@ export default function Actividad() {
             return (
               <div
                 key={p.id}
-                onClick={() => setSel(p.id)}
+                {...filaPulsable(activa, () => setSel(p.id))}
                 className="fila"
                 style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 10.6, padding: "7px 8px", margin: "0 -8px", borderRadius: 12, background: activa ? "#F1F8F9" : undefined }}
               >
