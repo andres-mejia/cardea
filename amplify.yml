@@ -1,35 +1,16 @@
 version: 1
 applications:
-  # Landing Astro (cardea.ai apex + www)
-  - appRoot: frontend/cardea-web
-    frontend:
-      phases:
-        preBuild:
-          commands:
-            - corepack enable
-            - corepack prepare pnpm@10.4.0 --activate
-            - pnpm install --frozen-lockfile
-        build:
-          commands:
-            - pnpm run build
-      artifacts:
-        baseDirectory: dist
-        files:
-          - '**/*'
-      cache:
-        paths:
-          - node_modules/**/*
-          - .astro/**/*
-
-  # Panel Next.js (app.cardea.ai)
+  # Panel Next.js (cardea-app.tekhos.com). El build corre desde la raíz del workspace
+  # como en Jano; Node se fija al .nvmrc porque la imagen de Amplify trae otra.
   - appRoot: frontend/cardea-app
     frontend:
       phases:
         preBuild:
           commands:
+            - nvm install 22.23.4 && nvm use 22.23.4
             - corepack enable
             - corepack prepare pnpm@10.4.0 --activate
-            - pnpm install --frozen-lockfile
+            - cd ../.. && pnpm install --frozen-lockfile && cd frontend/cardea-app
         build:
           commands:
             - pnpm run build
@@ -39,5 +20,30 @@ applications:
           - '**/*'
       cache:
         paths:
+          - ../../node_modules/**/*
           - node_modules/**/*
           - .next/cache/**/*
+
+  # Landing Astro (cardea.tekhos.com). Hoy se publica con landing-deploy.yml; esto
+  # solo aplica si se vuelve a conectar al repo. Astro 7 exige Node >= 22.23.4.
+  - appRoot: frontend/cardea-web
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - nvm install 22.23.4 && nvm use 22.23.4
+            - corepack enable
+            - corepack prepare pnpm@10.4.0 --activate
+            - cd ../.. && pnpm install --frozen-lockfile && cd frontend/cardea-web
+        build:
+          commands:
+            - pnpm run build
+      artifacts:
+        baseDirectory: dist
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - ../../node_modules/**/*
+          - node_modules/**/*
+          - .astro/**/*
