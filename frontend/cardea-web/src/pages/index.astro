@@ -10,10 +10,13 @@ const canales = [
 ];
 
 const pantallas = [
-  { img: "/img/panel.png", t: "Panel general", d: "El mes de un vistazo y lo que necesita una decisión hoy." },
-  { img: "/img/costes.png", t: "Costes y chargeback", d: "Gasto por equipo y centro de coste, con presupuesto, aviso y bloqueo. Exportable a tu ERP." },
-  { img: "/img/politicas.png", t: "Políticas", d: "Datos personales, modelos permitidos, tools MCP y límites. Se prueban con un texto antes de activarse." },
-  { img: "/img/actividad.png", t: "Actividad y auditoría", d: "Cada petición y cada tool call con su decisión y su recorrido. El texto original no se almacena." },
+  { img: "/img/panel.webp", t: "Panel general", q: "¿Cómo va el mes y qué necesita una decisión hoy?", d: "Gasto frente a presupuesto, reparto por canal y una lista corta de lo que no puede esperar." },
+  { img: "/img/costes.webp", t: "Costes y chargeback", q: "¿Cuánto gasta cada equipo, y en qué?", d: "Gasto por equipo, proyecto, modelo o herramienta, con centro de coste, aviso y bloqueo. Exportable a tu ERP." },
+  { img: "/img/politicas.webp", t: "Políticas", q: "¿Qué se comprueba antes de que una petición salga?", d: "Datos personales, modelos permitidos, tools MCP y límites de gasto. Cada regla se prueba con un texto antes de activarse." },
+  { img: "/img/actividad.webp", t: "Actividad y auditoría", q: "¿Qué ha pasado con esta petición?", d: "Cada petición y cada tool call con su decisión y su recorrido. El texto original no se almacena." },
+  { img: "/img/desarrolladores.webp", t: "Desarrolladores y claves", q: "¿Quién usa qué herramienta, y con qué clave?", d: "Una clave por persona para todos sus CLIs, emitida tras el SSO, con caducidad y detección de claves sin uso." },
+  { img: "/img/evidencias.webp", t: "Evidencias", q: "¿Qué puedo demostrar ante una auditoría?", d: "Un informe por periodo que declara qué controles cubre, cuáles en parte y cuáles no." },
+  { img: "/img/conexiones.webp", t: "Conexiones", q: "¿Está llegando cada dato?", d: "Proveedores de modelos, collectors e identidad, con su estado y lo que hay que reconectar." },
 ];
 
 const fuera = [
@@ -33,7 +36,7 @@ const fuera = [
         <a class="btn btn-ghost" href="#alcance">Qué cubre y qué no</a>
       </div>
       <figure class="shot">
-        <img src="/img/panel.png" width="2120" height="1208" alt="Panel general de Cardea con el gasto del mes, el reparto por canal y lo que requiere atención" loading="eager" />
+        <img src="/img/panel.webp" width="2880" height="1640" alt="Panel general de Cardea con el gasto del mes, el reparto por canal y lo que requiere atención" loading="eager" />
         <figcaption><span class="ilustrativo">Datos ilustrativos</span></figcaption>
       </figure>
     </div>
@@ -76,11 +79,11 @@ const fuera = [
     <div class="wrap">
       <p class="kicker">Pantallas</p>
       <h2>Hecho para que lo lean Finanzas, Seguridad y Cumplimiento, no solo Plataforma</h2>
-      <div class="grid grid-2" style="margin-top:36px">
+      <div class="pantallas">
         {pantallas.map((p) => (
           <figure class="pant">
-            <img src={p.img} width="2120" height="1208" alt={`Pantalla de ${p.t}`} loading="lazy" />
-            <figcaption><h3>{p.t}</h3><p>{p.d}</p></figcaption>
+            <img src={p.img} width="2880" height="1640" alt={`Pantalla de ${p.t}: ${p.d}`} loading="lazy" decoding="async" />
+            <figcaption><h3>{p.t}</h3><p class="pregunta">{p.q}</p><p>{p.d}</p></figcaption>
           </figure>
         ))}
       </div>
@@ -143,9 +146,14 @@ const fuera = [
   .ventajas { margin-top: 48px; padding-top: 36px; border-top: 1px solid var(--cardea-linea); }
   .ventajas b { display: block; font-size: 17px; font-weight: 600; margin-bottom: 8px; }
   .ventajas p { font-size: 15px; }
-  .pant img { border-radius: var(--radio); box-shadow: 0 0 0 1px var(--cardea-linea), 0 24px 48px -28px rgba(18,38,58,.4); }
-  .pant figcaption { padding: 16px 4px 0; }
-  .pant figcaption p { font-size: 14.5px; margin-top: 4px; }
+  .pantallas { display: flex; flex-direction: column; gap: clamp(40px, 6vw, 72px); margin-top: 44px; }
+  .pant { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 48px); align-items: center; }
+  .pant:nth-child(even) { grid-template-columns: minmax(0, 1fr) minmax(0, 1.75fr); }
+  .pant:nth-child(even) img { order: 2; }
+  .pant img { border-radius: 14px; box-shadow: 0 0 0 1px var(--cardea-linea), 0 24px 48px -28px rgba(18,38,58,.4); }
+  .pant figcaption p { font-size: 16px; margin-top: 8px; }
+  .pant figcaption .pregunta { color: var(--cardea-petroleo); font-weight: 500; margin-top: 6px; }
+  @media (max-width: 860px) { .pant, .pant:nth-child(even) { grid-template-columns: 1fr; } .pant:nth-child(even) img { order: 0; } }
   .fuera { list-style: none; margin-top: 32px; max-width: 760px; }
   .fuera li { padding: 16px 0 16px 28px; border-bottom: 1px solid var(--cardea-linea); position: relative; color: var(--cardea-texto); }
   .fuera li::before { content: ""; position: absolute; left: 4px; top: 25px; width: 10px; height: 10px; border-radius: 3px; background: var(--estado-aviso); }

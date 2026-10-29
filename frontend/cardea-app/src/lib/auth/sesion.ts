@@ -17,8 +17,8 @@ export interface Usuario {
 }
 
 const USUARIO_DE_EJEMPLO: Usuario = {
-  email: "demo@cardea.example",
-  nombre: "Usuario de demostración",
+  email: "marta.soler@cardea.example",
+  nombre: "Marta Soler",
   tenantId: "demo",
   rol: "owner",
   foto: "",
@@ -100,8 +100,30 @@ export async function usuarioActual(): Promise<Usuario | null> {
   }
 }
 
-export async function entrar(email: string, contrasena: string): Promise<void> {
-  if (esModoEjemplo()) return;
+/** Resultado de entrar con contraseña: dentro, o hace falta fijar una contraseña nueva. */
+export type ResultadoEntrada = "dentro" | "nueva_contrasena";
+
+/** Traduce los errores de Cognito a un mensaje que la persona pueda entender. */
+export function mensajeDeError(e: unknown): string {
+  const nombre = e instanceof Error ? e.name : "";
+  switch (nombre) {
+    case "NotAuthorizedException":
+    case "UserNotFoundException":
+      return "El email o la contraseña no son correctos.";
+    case "InvalidPasswordException":
+      return "La contraseña nueva no cumple la política: al menos 12 caracteres, con mayúsculas, minúsculas, números y símbolos.";
+    case "LimitExceededException":
+    case "TooManyRequestsException":
+      return "Demasiados intentos. Espera unos minutos y vuelve a probar.";
+    case "UserNotConfirmedException":
+      return "Tu cuenta aún no está confirmada. Pide ayuda a tu administrador.";
+    default:
+      return "No se ha podido iniciar sesión. Prueba otra vez en un momento.";
+  }
+}
+
+export async function entrar(email: string, contrasena: string): Promise<ResultadoEntrada> {
+  if (esModoEjemplo()) return "dentro";
   await asegurarAmplify();
   const auth = await import("aws-amplify/auth");
   const resultado = await auth.signIn({
@@ -109,9 +131,17 @@ export async function entrar(email: string, contrasena: string): Promise<void> {
     password: contrasena,
     options: { authFlowType: "USER_AUTH", preferredChallenge: "PASSWORD_SRP" },
   });
-  if (!resultado.isSignedIn) {
-    throw new Error(`Inicio de sesión incompleto: ${resultado.nextStep.signInStep}`);
-  }
+  if (resultado.isSignedIn) return "dentro";
+  // Usuario dado de alta por un administrador: la primera vez fija su contraseña.
+  if (resultado.nextStep.signInStep === "CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED") return "nueva_contrasena";
+  throw new Error(`Inicio de sesión incompleto: ${resultado.nextStep.signInStep}`);
+}
+
+export async function fijarContrasena(nueva: string): Promise<void> {
+  await asegurarAmplify();
+  const { confirmSignIn } = await import("aws-amplify/auth");
+  const resultado = await confirmSignIn({ challengeResponse: nueva });
+  if (!resultado.isSignedIn) throw new Error(`Inicio de sesión incompleto: ${resultado.nextStep.signInStep}`);
 }
 
 let saliendo = false;

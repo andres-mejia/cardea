@@ -20,11 +20,12 @@ export function BarraLateral({ usuario }: { usuario: Usuario }) {
         <Isotipo size={20} dark />
         Cardea
       </div>
+      <nav aria-label="Principal">
       {NAVEGACION.map((g) => (
         <div key={g.titulo}>
           <div className="grp">{g.titulo}</div>
           {g.secciones.map((s) => (
-            <Link key={s.href} href={s.href} className={ruta === s.href ? "on" : ""}>
+            <Link key={s.href} href={s.href} className={ruta === s.href ? "on" : ""} aria-current={ruta === s.href ? "page" : undefined}>
               <Icono n={s.icono as NombreIcono} size={14} />
               {s.nombre}
               {s.contador && <span className="cnt">{s.contador}</span>}
@@ -32,6 +33,7 @@ export function BarraLateral({ usuario }: { usuario: Usuario }) {
           ))}
         </div>
       ))}
+      </nav>
       <div className="me">
         <FotoUsuario foto={usuario.foto} nombre={usuario.nombre} size={30} />
         <div className="min-w-0">
