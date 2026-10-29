@@ -12,6 +12,8 @@ export interface Usuario {
   readonly nombre: string;
   readonly tenantId: string;
   readonly rol: "owner" | "member";
+  /** Foto de la cuenta de Google (atributo `picture`); vacía si entra con contraseña. */
+  readonly foto: string;
 }
 
 const USUARIO_DE_EJEMPLO: Usuario = {
@@ -19,6 +21,7 @@ const USUARIO_DE_EJEMPLO: Usuario = {
   nombre: "Usuario de demostración",
   tenantId: "demo",
   rol: "owner",
+  foto: "",
 };
 
 let configurado = false;
@@ -90,6 +93,7 @@ export async function usuarioActual(): Promise<Usuario | null> {
       nombre: texto("name") || texto("email"),
       tenantId: texto("custom:tenant_id"),
       rol: texto("custom:role") === "owner" ? "owner" : "member",
+      foto: texto("picture"),
     };
   } catch {
     return null;

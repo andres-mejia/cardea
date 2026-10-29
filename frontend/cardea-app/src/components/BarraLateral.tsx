@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { Avatar, Icono, type NombreIcono } from "./graficos";
+import { FotoUsuario } from "./FotoUsuario";
+import { Icono, type NombreIcono } from "./graficos";
 import { Isotipo } from "./Isotipo";
 import type { Usuario } from "@/lib/auth/sesion";
 import { salir } from "@/lib/auth/sesion";
@@ -32,7 +33,7 @@ export function BarraLateral({ usuario }: { usuario: Usuario }) {
         </div>
       ))}
       <div className="me">
-        <Avatar i={0} size={30} />
+        <FotoUsuario foto={usuario.foto} nombre={usuario.nombre} size={30} />
         <div className="min-w-0">
           <b className="truncate" title={usuario.email}>{usuario.nombre}</b>
           <span>{ROL[usuario.rol]}</span>
