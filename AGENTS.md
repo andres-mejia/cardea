@@ -41,7 +41,7 @@ Extracto del pitch (`docs/pitch/cardea-pitch.pdf`); no se re-litiga durante la i
 
 ## 4. Arquitectura
 
-- **Control plane**: Java 21 + Quarkus, arquitectura hexagonal. No Spring Boot. Un servicio por Lambda en nuestra cuenta; el mismo código se empaqueta como contenedor para el chart de Helm. **Sin VPC** para las Lambdas (Aurora con IAM auth y TLS, patrón heredado de Fenora).
+- **Control plane**: Java 21 + Quarkus, arquitectura hexagonal. No Spring Boot. Un servicio por Lambda en nuestra cuenta; el mismo código se empaqueta como contenedor para el chart de Helm. Lambdas **en VPC privada** con JDBC; Aurora privada con IAM auth y TLS, salida por NAT instance y acceso humano por bastión SSM, como Fenora hoy (ADR-004).
 - **Data plane**: contenedor, nunca Lambda (streaming SSE, sesiones MCP, latencia por petición y paridad exacta con lo que se instala en casa del cliente). ECS Fargate en dev; Helm para clientes. ADR-002.
 - Schema por tenant desde el día uno aunque el MVP sea single-tenant. `ScopedValue` para el TenantContext, **nunca `ThreadLocal`**. Valida el `tenantId` con regex antes de cualquier `SET search_path`.
 - `@Transactional` en el servicio, nunca en el repositorio. Los repositorios no llevan `WHERE tenant_id`: lo garantiza el schema.

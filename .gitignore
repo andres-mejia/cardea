@@ -19,7 +19,7 @@ target/
 *.tfstate.*
 *.tfvars
 !*.tfvars.example
-.terraform.lock.hcl
+# .terraform.lock.hcl se versiona (como en Fenora): fija los proveedores para `init -lockfile=readonly`.
 
 # Pitch
 docs/pitch/pitch.html
@@ -28,3 +28,8 @@ docs/pitch/__pycache__/
 # Local
 .DS_Store
 *.log
+tfplan
+tfplan.json
+
+# Ajustes locales de Claude Code
+.claude/settings.local.json

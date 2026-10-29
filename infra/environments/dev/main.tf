@@ -1,11 +1,10 @@
-# Cardea — entorno dev
+# Cardea — entorno dev (spec 001-infra-base)
 #
-# Primera pasada: solo lo que necesita la landing y el panel vacío (ADR-002).
-#   - Amplify estático para cardea.ai (Astro)
-#   - Amplify WEB_COMPUTE para app.cardea.ai (Next.js)
-#   - Formulario de contacto: HTTP API + Lambda + DynamoDB + SES
-# Cognito, Aurora, el control plane y el data plane (Fargate) entran en pasadas siguientes,
-# cada una con su módulo y su ADR si cambia algo.
+#   main.tf      landing, panel y formulario de contacto
+#   network.tf   VPC, NAT instance, bastión, Aurora (ADR-004)
+#   identity.tf  Cognito y HTTP API del control plane
+#   platform.tf  ECR, cola de uso, informes, correo
+#   ci.tf        roles OIDC de GitHub Actions
 
 terraform {
   required_version = ">= 1.6"
@@ -15,39 +14,13 @@ terraform {
   }
 }
 
-variable "environment" {
-  type    = string
-  default = "dev"
-}
-
-variable "domain_name" {
-  type    = string
-  default = "cardea.ai"
-}
-
-variable "github_repository" {
-  type        = string
-  default     = "https://github.com/andres-mejia/cardea"
-  description = "Repo que construye Amplify."
-}
-
-variable "github_access_token" {
-  type        = string
-  default     = ""
-  sensitive   = true
-  description = "PAT con repo y admin:repo_hook. Vacío: cablear la conexión a GitHub tras el primer apply."
-}
-
-variable "ses_from_address" {
-  type    = string
-  default = "hola@cardea.ai"
-}
-
 module "contact" {
-  source           = "../../modules/contact"
-  environment      = var.environment
-  domain_name      = var.domain_name
-  ses_from_address = var.ses_from_address
+  source                 = "../../modules/contact"
+  environment            = var.environment
+  allowed_origins        = [local.landing_url]
+  ses_from_address       = var.mail_address
+  notify_address         = var.mail_address
+  configuration_set_name = module.email.configuration_set_name
 }
 
 module "landing" {
@@ -57,13 +30,14 @@ module "landing" {
   platform            = "WEB"
   app_root            = "frontend/cardea-web"
   artifacts_dir       = "dist"
-  domain_name         = var.domain_name
-  subdomains          = ["", "www"]
+  domain_name         = var.base_domain
+  subdomains          = [var.landing_prefix]
   github_repository   = var.github_repository
   github_access_token = var.github_access_token
+  pnpm_version        = var.pnpm_version
   environment_variables = {
     PUBLIC_WAITLIST_ENDPOINT = module.contact.endpoint_url
-    PUBLIC_APP_URL           = "https://app.${var.domain_name}"
+    PUBLIC_APP_URL           = local.panel_url
   }
 }
 
@@ -74,13 +48,15 @@ module "panel" {
   platform            = "WEB_COMPUTE"
   app_root            = "frontend/cardea-app"
   artifacts_dir       = ".next"
-  domain_name         = var.domain_name
-  subdomains          = ["app"]
+  domain_name         = var.base_domain
+  subdomains          = [var.panel_prefix]
   github_repository   = var.github_repository
   github_access_token = var.github_access_token
-  environment_variables = {}
+  pnpm_version        = var.pnpm_version
+  environment_variables = {
+    NEXT_PUBLIC_COGNITO_DOMAIN       = module.cognito.hosted_ui_domain
+    NEXT_PUBLIC_COGNITO_CLIENT_ID    = module.cognito.app_client_id
+    NEXT_PUBLIC_COGNITO_REDIRECT_URI = "${local.panel_url}/"
+    NEXT_PUBLIC_API_URL              = module.api_gateway.api_endpoint
+  }
 }
-
-output "landing_url" { value = "https://${var.domain_name}" }
-output "panel_url" { value = "https://app.${var.domain_name}" }
-output "contact_endpoint" { value = module.contact.endpoint_url }

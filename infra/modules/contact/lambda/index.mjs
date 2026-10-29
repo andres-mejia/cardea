@@ -5,7 +5,7 @@ import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
 const ddb = new DynamoDBClient({});
 const ses = new SESClient({});
-const { TABLE_NAME, FROM_ADDRESS, NOTIFY_ADDRESS } = process.env;
+const { TABLE_NAME, FROM_ADDRESS, NOTIFY_ADDRESS, CONFIGURATION_SET } = process.env;
 const USOS = new Set(["", "api", "clis", "asientos", "todo"]);
 
 const respond = (statusCode, body) => ({
@@ -43,6 +43,7 @@ export const handler = async (event) => {
   try {
     await ses.send(new SendEmailCommand({
       Source: FROM_ADDRESS,
+      ConfigurationSetName: CONFIGURATION_SET,
       Destination: { ToAddresses: [NOTIFY_ADDRESS] },
       Message: {
         Subject: { Data: `Demo de Cardea: ${empresa || nombre}` },

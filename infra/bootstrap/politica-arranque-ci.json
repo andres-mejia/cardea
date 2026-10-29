@@ -1,0 +1,187 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AdministradorHastaEl31DeEneroDe2027",
+      "Effect": "Allow",
+      "Action": "*",
+      "Resource": "*",
+      "Condition": {
+        "DateLessThan": {
+          "aws:CurrentTime": "2027-01-31T23:59:59Z"
+        }
+      }
+    },
+    {
+      "Sid": "NoDejarseSinAcceso",
+      "Effect": "Deny",
+      "Action": [
+        "iam:DeleteRole",
+        "iam:DeleteRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:DeleteOpenIDConnectProvider"
+      ],
+      "Resource": [
+        "arn:aws:iam::966378755474:role/cardea-dev-github-actions",
+        "arn:aws:iam::966378755474:oidc-provider/token.actions.githubusercontent.com"
+      ]
+    },
+    {
+      "Sid": "NoTocarFenora",
+      "Effect": "Deny",
+      "Action": "*",
+      "Resource": [
+        "arn:aws:iam::*:role/*fenora*",
+        "arn:aws:iam::*:policy/*fenora*",
+        "arn:aws:iam::*:instance-profile/*fenora*",
+        "arn:aws:rds:*:*:*fenora*",
+        "arn:aws:lambda:*:*:*fenora*",
+        "arn:aws:cognito-idp:*:*:*fenora*",
+        "arn:aws:dynamodb:*:*:*fenora*",
+        "arn:aws:sqs:*:*:*fenora*",
+        "arn:aws:sns:*:*:*fenora*",
+        "arn:aws:logs:*:*:*fenora*",
+        "arn:aws:events:*:*:*fenora*",
+        "arn:aws:scheduler:*:*:*fenora*",
+        "arn:aws:secretsmanager:*:*:*fenora*",
+        "arn:aws:ssm:*:*:*fenora*",
+        "arn:aws:ecr:*:*:*fenora*",
+        "arn:aws:amplify:*:*:*fenora*",
+        "arn:aws:apigateway:*:*:*fenora*",
+        "arn:aws:cloudfront:*:*:*fenora*",
+        "arn:aws:ses:*:*:*fenora*",
+        "arn:aws:wafv2:*:*:*fenora*",
+        "arn:aws:kms:*:*:*fenora*",
+        "arn:aws:states:*:*:*fenora*",
+        "arn:aws:cloudwatch:*:*:*fenora*",
+        "arn:aws:budgets:*:*:*fenora*",
+        "arn:aws:ce:*:*:*fenora*",
+        "arn:aws:iam::*:role/*fintrack*",
+        "arn:aws:iam::*:policy/*fintrack*",
+        "arn:aws:iam::*:instance-profile/*fintrack*",
+        "arn:aws:rds:*:*:*fintrack*",
+        "arn:aws:lambda:*:*:*fintrack*",
+        "arn:aws:cognito-idp:*:*:*fintrack*",
+        "arn:aws:dynamodb:*:*:*fintrack*",
+        "arn:aws:sqs:*:*:*fintrack*",
+        "arn:aws:sns:*:*:*fintrack*",
+        "arn:aws:logs:*:*:*fintrack*",
+        "arn:aws:events:*:*:*fintrack*",
+        "arn:aws:scheduler:*:*:*fintrack*",
+        "arn:aws:secretsmanager:*:*:*fintrack*",
+        "arn:aws:ssm:*:*:*fintrack*",
+        "arn:aws:ecr:*:*:*fintrack*",
+        "arn:aws:amplify:*:*:*fintrack*",
+        "arn:aws:apigateway:*:*:*fintrack*",
+        "arn:aws:cloudfront:*:*:*fintrack*",
+        "arn:aws:ses:*:*:*fintrack*",
+        "arn:aws:wafv2:*:*:*fintrack*",
+        "arn:aws:kms:*:*:*fintrack*",
+        "arn:aws:states:*:*:*fintrack*",
+        "arn:aws:cloudwatch:*:*:*fintrack*",
+        "arn:aws:budgets:*:*:*fintrack*",
+        "arn:aws:ce:*:*:*fintrack*",
+        "arn:aws:s3:::fenora-*",
+        "arn:aws:s3:::fintrack-*"
+      ]
+    },
+    {
+      "Sid": "NoTocarRecursosEtiquetadosDeFenora",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:*",
+        "elasticloadbalancing:*",
+        "rds:*",
+        "autoscaling:*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/Project": "fenora"
+        }
+      }
+    },
+    {
+      "Sid": "NoBorrarEstadoDeCardea",
+      "Effect": "Deny",
+      "Action": [
+        "s3:DeleteBucket",
+        "s3:DeleteObjectVersion",
+        "s3:PutBucketVersioning",
+        "s3:PutLifecycleConfiguration",
+        "s3:PutBucketPolicy",
+        "dynamodb:DeleteTable"
+      ],
+      "Resource": [
+        "arn:aws:s3:::cardea-terraform-state-966378755474",
+        "arn:aws:s3:::cardea-terraform-state-966378755474/*",
+        "arn:aws:dynamodb:eu-west-1:966378755474:table/cardea-terraform-locks"
+      ]
+    },
+    {
+      "Sid": "NoEngancharPoliticasDeAdministradorANadie",
+      "Effect": "Deny",
+      "Action": [
+        "iam:AttachRolePolicy",
+        "iam:AttachUserPolicy",
+        "iam:AttachGroupPolicy"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnEquals": {
+          "iam:PolicyARN": [
+            "arn:aws:iam::aws:policy/AdministratorAccess",
+            "arn:aws:iam::aws:policy/IAMFullAccess",
+            "arn:aws:iam::aws:policy/PowerUserAccess"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "NoRepintarPoliticasNiUsuariosNiGrupos",
+      "Effect": "Deny",
+      "Action": [
+        "iam:CreatePolicyVersion",
+        "iam:SetDefaultPolicyVersion",
+        "iam:PutUserPolicy",
+        "iam:PutGroupPolicy"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "NoCrearCredencialesDeLargaVida",
+      "Effect": "Deny",
+      "Action": [
+        "iam:CreateUser",
+        "iam:CreateAccessKey",
+        "iam:UpdateAccessKey",
+        "iam:CreateLoginProfile",
+        "iam:UpdateLoginProfile",
+        "iam:CreateServiceSpecificCredential",
+        "iam:ResetServiceSpecificCredential",
+        "iam:DeactivateMFADevice"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "NoOrganizacionesNiCambiosDeFacturacion",
+      "Effect": "Deny",
+      "Action": [
+        "organizations:*",
+        "account:CloseAccount",
+        "account:PutAlternateContact",
+        "account:DeleteAlternateContact",
+        "account:PutContactInformation",
+        "payments:*",
+        "purchase-orders:*",
+        "billing:UpdateBillingPreferences",
+        "billing:PutContractInformation",
+        "billing:UpdateIAMAccessPreference",
+        "aws-portal:ModifyBilling",
+        "aws-portal:ModifyAccount",
+        "aws-portal:ModifyPaymentMethods"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

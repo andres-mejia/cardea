@@ -1,9 +1,13 @@
 variable "environment" { type = string }
-variable "domain_name" { type = string }
+variable "allowed_origins" {
+  type        = list(string)
+  description = "Orígenes CORS: la landing."
+}
+variable "configuration_set_name" { type = string }
 variable "ses_from_address" { type = string }
 variable "notify_address" {
-  type    = string
-  default = "hola@cardea.ai"
+  type        = string
+  description = "Destino del aviso de cada solicitud."
 }
 variable "log_retention_days" {
   type    = number

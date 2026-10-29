@@ -1,0 +1,72 @@
+# Publica la landing (Astro estática) en Amplify por despliegue manual en cada push a `main`
+# que la toca. Amplify no acepta el token de `gh` para conectar el repo (infra/README.md);
+# el despliegue manual no necesita esa conexión. El rol solo puede desplegar en esta app.
+name: Landing desplegar
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/cardea-web/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/landing-deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: landing-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  desplegar:
+    name: landing · desplegar
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      AWS_REGION: eu-west-1
+      APP_NAME: cardea-landing-dev
+      APP_URL: https://cardea-app.tekhos.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --filter @cardea/web...
+      - name: Credenciales AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
+        with:
+          role-to-assume: ${{ secrets.AWS_GITHUB_OIDC_ROLE_ARN }}
+          aws-region: eu-west-1
+      - name: Construir
+        run: |
+          set -euo pipefail
+          ENDPOINT="$(aws apigatewayv2 get-apis --query "Items[?Name=='cardea-dev-contact-api'].ApiEndpoint | [0]" --output text)"
+          export PUBLIC_WAITLIST_ENDPOINT="${ENDPOINT}/contact"
+          export PUBLIC_APP_URL="${APP_URL}"
+          echo "endpoint del formulario: ${PUBLIC_WAITLIST_ENDPOINT}"
+          pnpm -C frontend/cardea-web build
+      - name: Publicar en Amplify
+        run: |
+          set -euo pipefail
+          APP_ID="$(aws amplify list-apps --query "apps[?name=='${APP_NAME}'].appId | [0]" --output text)"
+          (cd frontend/cardea-web/dist && zip -qr "${RUNNER_TEMP}/landing.zip" .)
+          DESPLIEGUE="$(aws amplify create-deployment --app-id "${APP_ID}" --branch-name main --output json)"
+          JOB="$(echo "${DESPLIEGUE}" | jq -r .jobId)"
+          curl -fsS -X PUT -H 'Content-Type: application/zip' --data-binary "@${RUNNER_TEMP}/landing.zip" \
+            "$(echo "${DESPLIEGUE}" | jq -r .zipUploadUrl)"
+          aws amplify start-deployment --app-id "${APP_ID}" --branch-name main --job-id "${JOB}" >/dev/null
+          for _ in $(seq 1 60); do
+            ESTADO="$(aws amplify get-job --app-id "${APP_ID}" --branch-name main --job-id "${JOB}" --query 'job.summary.status' --output text)"
+            echo "job ${JOB}: ${ESTADO}"
+            case "${ESTADO}" in
+              SUCCEED) exit 0 ;;
+              FAILED|CANCELLED) exit 1 ;;
+            esac
+            sleep 10
+          done
+          exit 1
