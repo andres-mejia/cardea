@@ -27,7 +27,7 @@ export default function PanelLayout({ children }: { children: ReactNode }) {
 
   if (sesion.estado !== "lista") {
     return (
-      <div className="flex min-h-screen items-center justify-center text-[13px] text-cardea-texto-suave" role="status">
+      <div className="flex min-h-screen items-center justify-center text-sm text-cardea-texto-suave" role="status">
         Comprobando la sesión…
       </div>
     );

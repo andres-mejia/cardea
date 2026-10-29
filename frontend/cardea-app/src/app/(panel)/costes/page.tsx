@@ -3,43 +3,31 @@
 import { useState } from "react";
 
 import { Cabecera, Cargando } from "@/components/Cabecera";
-import { Anillo, Donut, eur, Icono, INK, RAMP, Segmentos, TEAL, WARN } from "@/components/graficos";
+import { eur, Icono, Segmentos, SERIE } from "@/components/graficos";
 import type { Equipo } from "@/lib/demo/datos";
 import { usePantalla } from "@/lib/demo/use-pantalla";
 
 const VISTAS = ["Equipo", "Proyecto", "Modelo", "Herramienta"] as const;
 type Vista = (typeof VISTAS)[number];
-const COLORES_MODELO = [INK, TEAL, "#3FA3AE", "#C9D8E2"];
 
+/** Barras apiladas por semana. En HTML para que las etiquetas no encojan con el ancho. */
 function Semanas({ semanas, grupos }: { semanas: { etiqueta: string; total: number }[]; grupos: Equipo[] }) {
   const total = grupos.reduce((s, g) => s + g.gastado, 0);
-  const [w, h, base, mx] = [420, 196, 168, 5600];
-  const y = (v: number) => base - ((base - 14) * v) / mx;
+  const max = Math.max(...semanas.map((s) => s.total));
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h} style={{ display: "block" }} role="img" aria-label="Gasto semanal por grupo">
-      {[0, 2000, 4000].map((g) => (
-        <g key={g}>
-          <line x1={34} y1={y(g)} x2={w} y2={y(g)} stroke="#EEF2F5" strokeWidth={1} />
-          <text x={28} y={y(g) + 3} textAnchor="end" style={{ fontSize: 8.5, fill: "#5F7183" }}>{g / 1000}k</text>
-        </g>
+    <div className="flex h-56 items-end gap-4 sm:gap-8" role="img" aria-label={`Gasto semanal: ${semanas.map((s) => `${s.etiqueta} ${eur(s.total)}`).join(", ")}`}>
+      {semanas.map((s) => (
+        <div key={s.etiqueta} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end">
+          <span className="num mb-1.5 text-sm">{eur(s.total)}</span>
+          <div className="flex w-full max-w-16 flex-col-reverse gap-0.5" style={{ height: `${(s.total / max) * 80}%` }}>
+            {grupos.map((g, j) => (
+              <span key={g.nombre} className="block w-full first:rounded-b-md last:rounded-t-md" style={{ flexGrow: g.gastado / total, background: SERIE[j % SERIE.length] }} />
+            ))}
+          </div>
+          <span className="etiqueta mt-2">{s.etiqueta}</span>
+        </div>
       ))}
-      {semanas.map((s, i) => {
-        const x = 62 + i * 92;
-        let cima = base;
-        const rects = grupos.map((g, j) => {
-          const hh = ((base - 14) * ((s.total * g.gastado) / total)) / mx;
-          cima -= hh;
-          return <rect key={g.nombre} x={x} y={cima + 1.5} width={46} height={Math.max(hh - 3, 0)} rx={5} fill={RAMP[j % RAMP.length]} />;
-        });
-        return (
-          <g key={s.etiqueta}>
-            {rects}
-            <text x={x + 23} y={cima - 5} textAnchor="middle" style={{ fontSize: 9.5, fontWeight: 600, fill: "#12263A" }}>{eur(s.total)}</text>
-            <text x={x + 23} y={base + 15} textAnchor="middle" style={{ fontSize: 9.5, fill: "#5F7183" }}>{s.etiqueta}</text>
-          </g>
-        );
-      })}
-    </svg>
+    </div>
   );
 }
 
@@ -54,6 +42,7 @@ export default function Costes() {
     : vista === "Herramienta" ? d.herramientas
     : vista === "Modelo" ? d.modelos.map((m) => ({ nombre: m.nombre, centro: "Modelo", presupuesto: Math.round((m.valor * 1.18) / 100) * 100, gastado: m.valor }))
     : d.equipos;
+  const maxModelo = Math.max(...d.modelos.map((m) => m.valor));
 
   function exportar() {
     const filas = [["grupo", "centro_de_coste", "presupuesto_eur", "gastado_eur"], ...grupos.map((g) => [g.nombre, g.centro, String(g.presupuesto), String(g.gastado)])];
@@ -69,53 +58,72 @@ export default function Costes() {
   return (
     <>
       {cabecera}
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <Segmentos opciones={VISTAS} valor={vista} onChange={setVista} />
-        <span className="chip line" style={{ padding: "6px 11px" }}><Icono n="clock" size={11} />{d.periodo}</span>
-        <button type="button" className="pillbtn ghost" style={{ marginLeft: "auto" }} onClick={exportar}>
-          <Icono n="down" size={11} />Exportar chargeback
+      <div className="barra-herr">
+        <Segmentos etiqueta="Agrupar por" opciones={VISTAS} valor={vista} onChange={setVista} />
+        <span className="meta flex items-center gap-1.5"><Icono n="clock" size={14} />{d.periodo}</span>
+        <button type="button" className="boton sec sm:ml-auto" onClick={exportar}>
+          <Icono n="down" size={16} />Exportar chargeback (CSV)
         </button>
       </div>
-      <div className="r2">
-        <div className="c2" style={{ flex: 1.7 }}>
-          <h4>
-            Gasto semanal
-            <span style={{ display: "flex", gap: 9, flexWrap: "wrap", justifyContent: "flex-end" }}>
-              {grupos.map((g, i) => (
-                <span key={g.nombre} className="lg" style={{ padding: 0 }}><i style={{ background: RAMP[i % RAMP.length] }} />{g.nombre}</span>
-              ))}
-            </span>
-          </h4>
+
+      <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
+        <section className="tarjeta" aria-labelledby="semanal">
+          <div className="tarjeta-titulo"><h2 id="semanal">Gasto semanal</h2><span className="meta">{eur(d.total)} en el mes</span></div>
           <Semanas semanas={d.semanas} grupos={grupos} />
-        </div>
-        <div className="c2" style={{ flex: 1 }}>
-          <h4>Por familia de modelo</h4>
-          <div style={{ display: "flex", justifyContent: "center", margin: "2px 0 10px" }}>
-            <Donut segs={d.modelos.map((m, i): [number, string] => [m.valor, COLORES_MODELO[i] ?? "#C9D8E2"])} size={112} thick={16}>
-              <div className="num" style={{ fontSize: 14 }}>{eur(d.total)}</div>
-              <div style={{ fontSize: 8.5, color: "#5F7183" }}>total</div>
-            </Donut>
+          <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
+            {grupos.map((g, i) => (
+              <li key={g.nombre} className="meta flex items-center gap-1.5"><span className="muestra" style={{ background: SERIE[i % SERIE.length] }} />{g.nombre}</li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="tarjeta" aria-labelledby="modelo">
+          <div className="tarjeta-titulo"><h2 id="modelo">Por familia de modelo</h2></div>
+          <ul className="space-y-4">
+            {d.modelos.map((m) => (
+              <li key={m.nombre}>
+                <div className="flex justify-between gap-3">
+                  <span>{m.nombre}</span>
+                  <span className="num">{eur(m.valor)} <span className="meta font-normal">· {Math.round((m.valor / d.total) * 100)} %</span></span>
+                </div>
+                <div className="pista mt-1.5"><i style={{ width: `${(m.valor / maxModelo) * 100}%` }} /></div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
+      <section className="tarjeta" aria-labelledby="reparto">
+        <div className="tarjeta-titulo"><h2 id="reparto">Presupuesto por {vista.toLowerCase()}</h2></div>
+        <div role="table" aria-labelledby="reparto">
+          <div role="row" className="etiqueta hidden grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-4 border-b border-cardea-linea-suave pb-2 md:grid">
+            <span role="columnheader">{vista}</span>
+            <span role="columnheader">Centro de coste</span>
+            <span role="columnheader" className="text-right">Gastado</span>
+            <span role="columnheader" className="text-right">Presupuesto</span>
+            <span role="columnheader">Consumo</span>
           </div>
-          {d.modelos.map((m, i) => (
-            <div key={m.nombre} className="lg"><i style={{ background: COLORES_MODELO[i] }} />{m.nombre}<b>{eur(m.valor)}</b></div>
-          ))}
+          <div className="lista">
+            {grupos.map((g) => {
+              const pct = Math.round((g.gastado / g.presupuesto) * 100);
+              const cerca = pct >= 90;
+              return (
+                <div key={g.nombre} role="row" className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1.5 py-3 md:grid-cols-[2fr_1fr_1fr_1fr_2fr]">
+                  <span role="cell" className="font-medium">{g.nombre}</span>
+                  <span role="cell" className="meta text-right md:text-left">{g.centro}</span>
+                  <span role="cell" className="num hidden text-right md:block">{eur(g.gastado)}</span>
+                  <span role="cell" className="num hidden text-right font-normal text-cardea-texto md:block">{eur(g.presupuesto)}</span>
+                  <span role="cell" className="col-span-2 flex items-center gap-3 md:col-span-1">
+                    <span className="pista flex-1"><i className={cerca ? "warn" : ""} style={{ width: `${Math.min(pct, 100)}%` }} /></span>
+                    <span className={`num w-12 text-right ${cerca ? "text-estado-aviso-texto" : ""}`}>{pct} %</span>
+                  </span>
+                  <span className="meta col-span-2 md:hidden">{eur(g.gastado)} de {eur(g.presupuesto)}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
-      <div className="r2">
-        {grupos.map((g) => {
-          const pct = Math.round((g.gastado / g.presupuesto) * 100);
-          return (
-            <div key={g.nombre} className="c2" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "13px 8px 12px" }}>
-              <Anillo pct={pct} size={78} thick={10} color={pct >= 90 ? WARN : TEAL}>
-                <div className="num" style={{ fontSize: 15 }}>{pct} %</div>
-              </Anillo>
-              <div style={{ fontSize: 11, fontWeight: 600, marginTop: 8 }}>{g.nombre}</div>
-              <div style={{ fontSize: 9.6, color: "#5F7183", marginTop: 2 }}>{eur(g.gastado)} de {eur(g.presupuesto)}</div>
-              <span className="chip mute mono" style={{ marginTop: 7, fontSize: 8.8 }}>{g.centro}</span>
-            </div>
-          );
-        })}
-      </div>
+      </section>
     </>
   );
 }

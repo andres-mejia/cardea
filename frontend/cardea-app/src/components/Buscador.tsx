@@ -19,7 +19,7 @@ const ACCIONES: Entrada[] = [
 ];
 
 const ENTRADAS: Entrada[] = [
-  ...NAVEGACION.flatMap((g) => g.secciones.map((s) => ({ texto: s.nombre, detalle: `Ir a · ${g.titulo}`, href: s.href, icono: s.icono as NombreIcono }))),
+  ...NAVEGACION.flatMap((g) => g.secciones.map((s) => ({ texto: s.nombre, detalle: "Pantalla", href: s.href, icono: s.icono as NombreIcono }))),
   ...ACCIONES,
 ];
 
@@ -62,8 +62,8 @@ export function Buscador() {
 
   return (
     <>
-      <button type="button" className="srch" onClick={() => setAbierto(true)} aria-haspopup="dialog">
-        <Icono n="search" size={12} />
+      <button type="button" className="buscar" onClick={() => setAbierto(true)} aria-haspopup="dialog">
+        <Icono n="search" size={16} />
         Buscar o ejecutar
         <span className="kbd">Ctrl K</span>
       </button>
@@ -71,7 +71,7 @@ export function Buscador() {
         <div className="paleta-fondo" onClick={() => setAbierto(false)}>
           <div role="dialog" aria-modal="true" aria-label="Buscar o ejecutar" className="paleta" onClick={(e) => e.stopPropagation()}>
             <div className="paleta-campo">
-              <Icono n="search" size={14} />
+              <Icono n="search" size={18} />
               <input
                 ref={entrada}
                 value={q}
@@ -99,7 +99,7 @@ export function Buscador() {
             <ul id="paleta-lista" role="listbox" className="paleta-lista">
               {resultados.map((e, n) => (
                 <li key={`${e.texto}-${e.href}`} id={`paleta-${n}`} role="option" aria-selected={n === i} className={n === i ? "on" : ""} onMouseEnter={() => setI(n)} onClick={() => ir(e)}>
-                  <span className="ic t" style={{ width: 26, height: 26, borderRadius: 8 }}><Icono n={e.icono} size={13} /></span>
+                  <span className="text-cardea-texto-suave"><Icono n={e.icono} size={16} /></span>
                   <span className="min-w-0 flex-1">{e.texto}</span>
                   <span className="paleta-detalle">{e.detalle}</span>
                 </li>

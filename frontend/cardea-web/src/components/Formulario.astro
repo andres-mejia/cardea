@@ -9,31 +9,55 @@ const endpoint = import.meta.env.PUBLIC_WAITLIST_ENDPOINT ?? "";
 ---
 <form class="f" id={id} novalidate data-form data-endpoint={endpoint}>
   <div class="campos">
-    <input class="in" type="text" name="nombre" placeholder="Nombre" autocomplete="name" required aria-label="Nombre" />
-    <input class="in" type="email" name="email" placeholder="Correo de empresa" autocomplete="email" required aria-label="Correo de empresa" />
-    <input class="in" type="text" name="empresa" placeholder="Empresa" autocomplete="organization" aria-label="Empresa" />
-    <select class="in" name="uso" aria-label="Cómo usáis la IA hoy">
-      <option value="">Cómo usáis la IA hoy</option>
-      <option value="api">Aplicaciones por API</option>
-      <option value="clis">CLIs de código (Claude Code, Codex, Copilot)</option>
-      <option value="asientos">Asientos y chat web</option>
-      <option value="todo">Las tres cosas</option>
-    </select>
+    <div class="campo">
+      <label for={`${id}-nombre`}>Nombre</label>
+      <input class="in" id={`${id}-nombre`} type="text" name="nombre" autocomplete="name" required />
+    </div>
+    <div class="campo">
+      <label for={`${id}-email`}>Correo de empresa</label>
+      <input class="in" id={`${id}-email`} type="email" name="email" autocomplete="email" inputmode="email" required />
+    </div>
+    <div class="campo">
+      <label for={`${id}-empresa`}>Empresa <span class="opc">(opcional)</span></label>
+      <input class="in" id={`${id}-empresa`} type="text" name="empresa" autocomplete="organization" />
+    </div>
+    <div class="campo">
+      <label for={`${id}-uso`}>Cómo usáis la IA hoy <span class="opc">(opcional)</span></label>
+      <select class="in" id={`${id}-uso`} name="uso">
+        <option value="">Elige una opción</option>
+        <option value="api">Aplicaciones por API</option>
+        <option value="clis">CLIs de código (Claude Code, Codex, Copilot)</option>
+        <option value="asientos">Asientos y chat web</option>
+        <option value="todo">Las tres cosas</option>
+      </select>
+    </div>
   </div>
-  <button class="btn btn-primary" type="submit" data-submit>Pedir una demo</button>
+  <div class="enviar">
+    <button class="btn btn-primary" type="submit" data-submit>Pedir una demo</button>
+    <p class="nota">Sin listas de marketing. Te escribimos nosotros, no un bot.</p>
+  </div>
   <p class="estado" data-estado role="status" aria-live="polite"></p>
-  <p class="nota">Sin listas de marketing. Te escribimos nosotros, no un bot.</p>
 </form>
 <script>
   const form = document.querySelector<HTMLFormElement>("[data-form]");
   if (form) {
     const estado = form.querySelector<HTMLElement>("[data-estado]")!;
     const boton = form.querySelector<HTMLButtonElement>("[data-submit]")!;
+    const campos = Array.from(form.querySelectorAll<HTMLInputElement>("input[required]"));
+    const avisar = (texto: string, tipo: "error" | "ok" | "") => { estado.textContent = texto; estado.dataset.tipo = tipo; };
+    // Al corregir un campo marcado, se le quita la marca de error.
+    for (const c of campos) c.addEventListener("input", () => { if (c.checkValidity()) c.removeAttribute("aria-invalid"); });
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      if (!form.checkValidity()) { estado.textContent = "Revisa el nombre y el correo."; return; }
+      const malos = campos.filter((c) => !c.checkValidity());
+      for (const c of campos) c.toggleAttribute("aria-invalid", malos.includes(c));
+      if (malos.length) {
+        avisar("Falta el nombre o el correo no es válido. Revisa los campos marcados.", "error");
+        malos[0].focus();
+        return;
+      }
       const datos = Object.fromEntries(new FormData(form).entries());
-      boton.disabled = true; estado.textContent = "Enviando…";
+      boton.disabled = true; avisar("Enviando…", "");
       try {
         const endpoint = form.dataset.endpoint;
         if (endpoint) {
@@ -42,21 +66,39 @@ const endpoint = import.meta.env.PUBLIC_WAITLIST_ENDPOINT ?? "";
         } else {
           await new Promise((res) => setTimeout(res, 500));
         }
-        estado.textContent = "Recibido. Te contestamos en dos días laborables.";
+        avisar("Recibido. Te contestamos en dos días laborables.", "ok");
         form.reset();
       } catch {
-        estado.textContent = "No se ha podido enviar. Escríbenos a cardea@tekhos.com.";
+        avisar("No se ha podido enviar. Escríbenos a cardea@tekhos.com.", "error");
       } finally { boton.disabled = false; }
     });
   }
 </script>
 <style>
-  .f { display: flex; flex-direction: column; gap: 12px; max-width: 560px; }
-  .campos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .in { font: inherit; font-size: 15px; padding: 13px 16px; border-radius: 14px; border: 1px solid var(--cardea-linea); background: #fff; color: var(--cardea-tinta); min-width: 0; }
-  .in:focus { outline: 2px solid var(--cardea-petroleo); outline-offset: 1px; border-color: transparent; }
-  .btn { align-self: flex-start; }
-  .estado { min-height: 1.4em; font-size: 14px; color: var(--cardea-petroleo); }
-  .nota { font-size: 13px; color: var(--cardea-texto-suave); }
-  @media (max-width: 560px) { .campos { grid-template-columns: 1fr; } }
+  .f { display: flex; flex-direction: column; gap: 20px; background: var(--cardea-niebla); border-radius: var(--radio); padding: clamp(20px, 3vw, 32px); }
+  .campos { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 16px; }
+  .campo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  label { font-size: 14px; font-weight: 500; color: var(--cardea-tinta); }
+  .opc { font-weight: 400; color: var(--cardea-texto-suave); }
+  .in {
+    font: inherit; font-size: 16px; min-height: 48px; padding: 11px 14px; border-radius: var(--radio-s);
+    border: 1px solid var(--cardea-borde-campo); background: #fff; color: var(--cardea-tinta); min-width: 0; width: 100%;
+  }
+  .in:hover { border-color: var(--cardea-texto); }
+  .in:focus-visible { outline: 2px solid var(--cardea-petroleo); outline-offset: 1px; border-color: var(--cardea-petroleo); border-radius: var(--radio-s); }
+  .in[aria-invalid] { border-color: var(--estado-bloqueada); box-shadow: inset 0 0 0 1px var(--estado-bloqueada); }
+  select.in {
+    appearance: none; cursor: pointer; padding-right: 40px;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%2312263a' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 15px center / 12px 8px;
+  }
+  .enviar { display: flex; align-items: center; gap: 12px 20px; flex-wrap: wrap; }
+  .nota { font-size: 14px; color: var(--cardea-texto-suave); }
+  .estado:empty { display: none; }
+  .estado { font-size: 15px; font-weight: 500; color: var(--cardea-tinta); }
+  .estado[data-tipo="error"] { color: var(--estado-bloqueada); }
+  .estado[data-tipo="ok"] { color: var(--estado-permitida); }
+  @media (max-width: 560px) {
+    .campos { grid-template-columns: 1fr; }
+    .enviar .btn { width: 100%; justify-content: center; }
+  }
 </style>

@@ -1,14 +1,10 @@
 /** Gráficos e iconos del pitch (docs/pitch/pitch_ui.py), en SVG sin dependencias. */
 
-import { useId } from "react";
-
-export const INK = "#12263A";
-export const TEAL = "#0A6F7D";
-export const TEAL_L = "#6CCBD3";
-export const OK = "#2E7D4F";
-export const WARN = "#C7791A";
-export const BAD = "#B3362B";
-export const RAMP = ["#12263A", "#0A6F7D", "#3FA3AE", "#8CCDD4", "#C9D8E2"];
+/** Colores de los gráficos: solo tokens. Los de estado, solo para estado. */
+export const TINTA = "var(--color-cardea-tinta)";
+export const PETROLEO = "var(--color-cardea-petroleo)";
+/** Serie de marca para categorías (equipos, modelos, canales): de tinta a niebla. */
+export const SERIE = [TINTA, PETROLEO, "var(--color-cardea-serie-3)", "var(--color-cardea-serie-4)", "var(--color-cardea-serie-5)"];
 
 const ICONOS = {
   grid: "M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M13 13h7v7h-7z",
@@ -36,6 +32,9 @@ const ICONOS = {
   euro: "M17 6a7 7 0 1 0 0 12 M4 10h9 M4 14h9",
   send: "M4 12l16-8-6 16-3-7z",
   logout: "M15 4h4v16h-4 M10 8l-4 4 4 4 M6 12h10",
+  menu: "M4 7h16 M4 12h16 M4 17h16",
+  close: "M6 6l12 12 M18 6L6 18",
+  copy: "M9 9h11v11H9z M5 15H4V4h11v1",
 } as const;
 
 export type NombreIcono = keyof typeof ICONOS;
@@ -48,24 +47,17 @@ export function Icono({ n, size = 14, sw = 1.8 }: { n: NombreIcono; size?: numbe
   );
 }
 
-const AV = [["#CFE4E8", "#0A6F7D"], ["#F1DDBF", "#8A5306"], ["#DAD6F0", "#4B3F9A"], ["#CFE6D6", "#1F6B40"], ["#F3D2CD", "#9A2B21"], ["#D5DEE6", "#12263A"]];
+function iniciales(nombre: string): string {
+  const partes = nombre.replace(/^app-/, "").split(/[\s-]+/).filter(Boolean);
+  return ((partes[0]?.[0] ?? "") + (partes[1]?.[0] ?? "")).toUpperCase();
+}
 
-export function Avatar({ i, size = 30 }: { i: number; size?: number }) {
-  const id = useId();
-  const [bg, fg] = AV[i % AV.length]!;
+/** Iniciales sobre niebla: sin colores inventados por persona. */
+export function Avatar({ nombre, size = 32 }: { nombre: string; size?: number }) {
   return (
-    <svg viewBox="0 0 40 40" width={size} height={size} aria-hidden="true" style={{ display: "block", flex: "none" }}>
-      <defs>
-        <clipPath id={id}>
-          <circle cx="20" cy="20" r="20" />
-        </clipPath>
-      </defs>
-      <g clipPath={`url(#${id})`}>
-        <rect width="40" height="40" fill={bg} />
-        <circle cx="20" cy="16" r="7.5" fill={fg} />
-        <path d="M4 44c0-9.5 7-15.5 16-15.5S36 34.5 36 44z" fill={fg} />
-      </g>
-    </svg>
+    <span className="avatar" aria-hidden="true" style={{ width: size, height: size, fontSize: size >= 36 ? 13 : 12 }}>
+      {iniciales(nombre)}
+    </span>
   );
 }
 
@@ -82,44 +74,19 @@ function suave(pts: [number, number][]): string {
   return d;
 }
 
+/** Área suavizada. El eje parte de cero para no exagerar la variación. */
 export function Area({ vals, w, h, line, fill, sw = 2, pad = 4 }: { vals: number[]; w: number; h: number; line: string; fill: string; sw?: number; pad?: number }) {
   const mx = Math.max(...vals);
-  const mn = Math.min(...vals);
+  const mn = 0;
   const span = mx - mn || 1;
   const pts = vals.map((v, i): [number, number] => [(i * w) / (vals.length - 1), pad + (h - 2 * pad) * (1 - (v - mn) / span)]);
   const d = suave(pts);
   return (
     <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h} preserveAspectRatio="none" style={{ display: "block" }} aria-hidden="true">
-      <path d={`${d} L ${w} ${h} L 0 ${h} Z`} fill={fill} />
-      <path d={d} fill="none" stroke={line} strokeWidth={sw} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+      <path d={`${d} L ${w} ${h} L 0 ${h} Z`} style={{ fill }} />
+      <path d={d} fill="none" style={{ stroke: line }} strokeWidth={sw} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
     </svg>
   );
-}
-
-export function Donut({ segs, size, thick, children }: { segs: [number, string][]; size: number; thick: number; children?: React.ReactNode }) {
-  const r = (size - thick) / 2;
-  const c = 2 * Math.PI * r;
-  const total = segs.reduce((s, [v]) => s + v, 0);
-  let acc = 0;
-  return (
-    <div style={{ position: "relative", width: size, height: size, flex: "none" }}>
-      <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ display: "block", transform: "rotate(-90deg)" }} aria-hidden="true">
-        {segs.map(([v, color], i) => {
-          const ln = (v / total) * c;
-          const dash = Math.max(ln - 3, 0.1);
-          const el = <circle key={i} cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={thick} strokeDasharray={`${dash} ${c - dash}`} strokeDashoffset={-acc} strokeLinecap="round" />;
-          acc += ln;
-          return el;
-        })}
-      </svg>
-      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>{children}</div>
-    </div>
-  );
-}
-
-export function Anillo({ pct, size, thick, color, children }: { pct: number; size: number; thick: number; color: string; children?: React.ReactNode }) {
-  const segs: [number, string][] = pct < 100 ? [[pct, color], [100 - pct, "#E6ECF1"]] : [[1, color]];
-  return <Donut segs={segs} size={size} thick={thick}>{children}</Donut>;
 }
 
 export function eur(v: number, decimales = 0): string {
@@ -130,12 +97,12 @@ export function miles(v: number): string {
   return v.toLocaleString("es-ES", { useGrouping: "always" });
 }
 
-/** Pestañas de filtro con el estilo `seg` del pitch. */
-export function Segmentos<T extends string>({ opciones, valor, onChange }: { opciones: readonly T[]; valor: T; onChange: (v: T) => void }) {
+/** Filtros como pestañas subrayadas. Son botones que se pulsan, no pestañas con panel. */
+export function Segmentos<T extends string>({ opciones, valor, onChange, etiqueta }: { opciones: readonly T[]; valor: T; onChange: (v: T) => void; etiqueta: string }) {
   return (
-    <div className="seg" role="tablist">
+    <div className="pestanas" role="group" aria-label={etiqueta}>
       {opciones.map((o) => (
-        <button key={o} type="button" role="tab" aria-selected={o === valor} className={o === valor ? "on" : ""} onClick={() => onChange(o)}>
+        <button key={o} type="button" aria-pressed={o === valor} onClick={() => onChange(o)}>
           {o}
         </button>
       ))}
