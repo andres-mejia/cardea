@@ -36,3 +36,6 @@ tfplan.json
 
 # Credenciales locales (OAuth de Google, etc.): nunca al repo
 .credentials/
+
+# Zips que genera Terraform para las Lambdas de los módulos
+infra/modules/*/lambda/*.zip

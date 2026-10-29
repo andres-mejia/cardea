@@ -1,11 +1,16 @@
-# Identidad del panel (portado de Fenora, reducido): pool con correo como usuario,
-# cliente público con PKCE y Hosted UI en dominio de prefijo. Google como IdP social
-# opcional, con el cliente OAuth leído de Secrets Manager. Sin passkeys ni triggers:
-# los atributos de tenant y la federación con el IdP del cliente llegan con la spec 002.
+# Identidad del panel (portada de Jano, que partió de la de Cardea y la de Fenora).
+#
+# Pool con el correo como usuario, alta solo por administrador (B2B), contraseña con
+# política fuerte y MFA TOTP opcional. Tier ESSENTIALS para `USER_AUTH`; primer factor
+# solo contraseña. Atributos `tenant_id` y `role` que el trigger pre-token copia al ID
+# token (AGENTS.md §4: el tenant sale del token). Google como IdP solo para usuarios ya
+# dados de alta: el trigger PreSignUp enlaza la identidad de Google con el usuario del
+# mismo email o la rechaza. La federación con el IdP de cada cliente llega con la spec 002.
 
 terraform {
   required_providers {
-    aws = { source = "hashicorp/aws", version = "~> 6.1" }
+    aws     = { source = "hashicorp/aws", version = "~> 6.1" }
+    archive = { source = "hashicorp/archive", version = "~> 2.0" }
   }
 }
 
@@ -19,61 +24,182 @@ variable "domain_prefix" {
 variable "callback_urls" { type = list(string) }
 variable "logout_urls" { type = list(string) }
 
-variable "google_oauth_secret_name" {
+variable "log_retention_days" {
+  type    = number
+  default = 30
+}
+
+variable "google_client_id" {
   type        = string
   default     = ""
-  description = "Secreto con {client_id, client_secret} del cliente OAuth de Google; vacío, sin Google."
+  description = "Client OAuth del proyecto de Google de Cardea (secreto cardea/<env>/google-oauth). Vacío = sin Google."
 }
+
+variable "google_client_secret" {
+  type      = string
+  default   = ""
+  sensitive = true
+}
+
+data "aws_caller_identity" "current" {}
 
 locals {
-  google = var.google_oauth_secret_name != ""
+  prefix        = "cardea-${var.environment}"
+  function_name = "cardea-${var.environment}-pre-token"
+  signup_name   = "cardea-${var.environment}-pre-signup"
+  google        = var.google_client_id != ""
+  # El ARN del pool depende de sus triggers: los permisos van sobre los pools de la
+  # cuenta y la región para no crear un ciclo.
+  pools_arn = "arn:aws:cognito-idp:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:userpool/*"
 }
 
-# El valor acaba en el estado como cualquier provider_details: el estado está cifrado y
-# solo lo leen los roles de CI.
-data "aws_secretsmanager_secret_version" "google" {
-  count     = local.google ? 1 : 0
-  secret_id = var.google_oauth_secret_name
+# ── Trigger pre-token-generation ────────────────────────────────────
+
+resource "aws_iam_role" "pre_token" {
+  name = "${local.function_name}-role"
+  assume_role_policy = jsonencode({
+    Version   = "2012-10-17"
+    Statement = [{ Effect = "Allow", Action = "sts:AssumeRole", Principal = { Service = "lambda.amazonaws.com" } }]
+  })
+  tags = { Component = "cognito" }
 }
 
-resource "aws_cognito_identity_provider" "google" {
-  count         = local.google ? 1 : 0
-  user_pool_id  = aws_cognito_user_pool.main.id
-  provider_name = "Google"
-  provider_type = "Google"
-
-  provider_details = {
-    client_id        = jsondecode(data.aws_secretsmanager_secret_version.google[0].secret_string).client_id
-    client_secret    = jsondecode(data.aws_secretsmanager_secret_version.google[0].secret_string).client_secret
-    authorize_scopes = "openid email profile"
-
-    # Valores que Cognito rellena por su cuenta: declarados para que el plan no derive.
-    attributes_url                = "https://people.googleapis.com/v1/people/me?personFields="
-    attributes_url_add_attributes = "true"
-    authorize_url                 = "https://accounts.google.com/o/oauth2/v2/auth"
-    oidc_issuer                   = "https://accounts.google.com"
-    token_request_method          = "POST"
-    token_url                     = "https://www.googleapis.com/oauth2/v4/token"
-  }
-
-  attribute_mapping = {
-    username       = "sub"
-    email          = "email"
-    email_verified = "email_verified"
-    name           = "name"
-  }
+resource "aws_iam_role_policy" "pre_token" {
+  name = "${local.function_name}-policy"
+  role = aws_iam_role.pre_token.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+      Resource = "${aws_cloudwatch_log_group.pre_token.arn}:*"
+    }]
+  })
 }
+
+resource "aws_cloudwatch_log_group" "pre_token" {
+  name              = "/aws/lambda/${local.function_name}"
+  retention_in_days = var.log_retention_days
+  tags              = { Component = "cognito" }
+}
+
+data "archive_file" "pre_token" {
+  type        = "zip"
+  source_dir  = "${path.module}/lambda/pre-token"
+  output_path = "${path.module}/lambda/pre-token.zip"
+  excludes    = ["index.test.mjs"]
+}
+
+resource "aws_lambda_function" "pre_token" {
+  function_name    = local.function_name
+  description      = "Copia custom:tenant_id y custom:role al ID token."
+  role             = aws_iam_role.pre_token.arn
+  handler          = "index.handler"
+  runtime          = "nodejs22.x"
+  timeout          = 5
+  memory_size      = 128
+  filename         = data.archive_file.pre_token.output_path
+  source_code_hash = data.archive_file.pre_token.output_base64sha256
+  tags             = { Component = "cognito" }
+
+  depends_on = [aws_cloudwatch_log_group.pre_token]
+}
+
+resource "aws_lambda_permission" "pre_token" {
+  statement_id  = "AllowCognito"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.pre_token.function_name
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = aws_cognito_user_pool.main.arn
+}
+
+# ── Trigger PreSignUp (enlace con Google) ───────────────────────────
+
+resource "aws_iam_role" "pre_signup" {
+  name = "${local.signup_name}-role"
+  assume_role_policy = jsonencode({
+    Version   = "2012-10-17"
+    Statement = [{ Effect = "Allow", Action = "sts:AssumeRole", Principal = { Service = "lambda.amazonaws.com" } }]
+  })
+  tags = { Component = "cognito" }
+}
+
+resource "aws_iam_role_policy" "pre_signup" {
+  name = "${local.signup_name}-policy"
+  role = aws_iam_role.pre_signup.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid      = "EnlazarConUsuarioExistente"
+        Effect   = "Allow"
+        Action   = ["cognito-idp:ListUsers", "cognito-idp:AdminLinkProviderForUser"]
+        Resource = local.pools_arn
+      },
+      {
+        Sid      = "Logs"
+        Effect   = "Allow"
+        Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+        Resource = "${aws_cloudwatch_log_group.pre_signup.arn}:*"
+      },
+    ]
+  })
+}
+
+resource "aws_cloudwatch_log_group" "pre_signup" {
+  name              = "/aws/lambda/${local.signup_name}"
+  retention_in_days = var.log_retention_days
+  tags              = { Component = "cognito" }
+}
+
+data "archive_file" "pre_signup" {
+  type        = "zip"
+  source_dir  = "${path.module}/lambda/pre-signup"
+  output_path = "${path.module}/lambda/pre-signup.zip"
+  excludes    = ["index.test.mjs"]
+}
+
+resource "aws_lambda_function" "pre_signup" {
+  function_name    = local.signup_name
+  description      = "Enlaza una identidad de Google con el usuario dado de alta con ese email; si no hay, rechaza."
+  role             = aws_iam_role.pre_signup.arn
+  handler          = "index.handler"
+  runtime          = "nodejs22.x"
+  timeout          = 5
+  memory_size      = 128
+  filename         = data.archive_file.pre_signup.output_path
+  source_code_hash = data.archive_file.pre_signup.output_base64sha256
+  tags             = { Component = "cognito" }
+
+  depends_on = [aws_cloudwatch_log_group.pre_signup]
+}
+
+resource "aws_lambda_permission" "pre_signup" {
+  statement_id  = "AllowCognito"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.pre_signup.function_name
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = aws_cognito_user_pool.main.arn
+}
+
+# ── Pool, cliente y dominio ─────────────────────────────────────────
 
 resource "aws_cognito_user_pool" "main" {
-  name                     = "cardea-${var.environment}"
+  name                     = local.prefix
+  user_pool_tier           = "ESSENTIALS"
   username_attributes      = ["email"]
   auto_verified_attributes = ["email"]
   deletion_protection      = "ACTIVE"
   mfa_configuration        = "OPTIONAL"
+  tags                     = { Component = "cognito" }
 
   # Producto B2B: las cuentas las da de alta un administrador, no hay registro abierto.
   admin_create_user_config {
     allow_admin_create_user_only = true
+  }
+
+  sign_in_policy {
+    allowed_first_auth_factors = ["PASSWORD"]
   }
 
   email_configuration {
@@ -92,11 +218,45 @@ resource "aws_cognito_user_pool" "main" {
     require_uppercase = true
   }
 
+  # Con `email` escribible por el cliente, un cambio de email no surte efecto hasta
+  # verificar el nuevo: nadie se apropia de otro email ni pierde el suyo por error.
+  user_attribute_update_settings {
+    attributes_require_verification_before_update = ["email"]
+  }
+
   account_recovery_setting {
     recovery_mechanism {
       name     = "verified_email"
       priority = 1
     }
+  }
+
+  # Solo el administrador escribe tenant y rol (el cliente no tiene permiso de escritura).
+  schema {
+    name                     = "tenant_id"
+    attribute_data_type      = "String"
+    mutable                  = true
+    developer_only_attribute = false
+    string_attribute_constraints {
+      min_length = 1
+      max_length = 64
+    }
+  }
+
+  schema {
+    name                     = "role"
+    attribute_data_type      = "String"
+    mutable                  = true
+    developer_only_attribute = false
+    string_attribute_constraints {
+      min_length = 1
+      max_length = 16
+    }
+  }
+
+  lambda_config {
+    pre_token_generation = aws_lambda_function.pre_token.arn
+    pre_sign_up          = aws_lambda_function.pre_signup.arn
   }
 
   verification_message_template {
@@ -110,8 +270,8 @@ resource "aws_cognito_user_pool_client" "app" {
   name                                 = "cardea-app-${var.environment}"
   user_pool_id                         = aws_cognito_user_pool.main.id
   generate_secret                      = false
-  explicit_auth_flows                  = ["ALLOW_USER_SRP_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
-  supported_identity_providers         = local.google ? ["COGNITO", aws_cognito_identity_provider.google[0].provider_name] : ["COGNITO"]
+  explicit_auth_flows                  = ["ALLOW_USER_AUTH", "ALLOW_USER_SRP_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
+  supported_identity_providers         = local.google ? ["COGNITO", "Google"] : ["COGNITO"]
   allowed_oauth_flows                  = ["code"]
   allowed_oauth_scopes                 = ["openid", "email", "profile"]
   allowed_oauth_flows_user_pool_client = true
@@ -122,11 +282,46 @@ resource "aws_cognito_user_pool_client" "app" {
   access_token_validity                = 1
   id_token_validity                    = 1
   refresh_token_validity               = 30
+  read_attributes                      = ["email", "email_verified", "name", "custom:tenant_id", "custom:role"]
+  # El mapeo de atributos de Google solo escribe lo que el cliente puede escribir: sin
+  # `email` aquí, el trigger PreSignUp no lo recibe (Cognito no deja escribir `email_verified`).
+  write_attributes = ["name", "email"]
 
   token_validity_units {
     access_token  = "hours"
     id_token      = "hours"
     refresh_token = "days"
+  }
+
+  # Sin esto Cognito rechaza el cliente: «The provider Google does not exist».
+  depends_on = [aws_cognito_identity_provider.google]
+}
+
+# Google. Los endpoints van explícitos: si no, el provider los lee de vuelta tras
+# crearlos y el plan propone borrarlos en cada ejecución.
+resource "aws_cognito_identity_provider" "google" {
+  count         = local.google ? 1 : 0
+  user_pool_id  = aws_cognito_user_pool.main.id
+  provider_name = "Google"
+  provider_type = "Google"
+
+  provider_details = {
+    client_id                     = var.google_client_id
+    client_secret                 = var.google_client_secret
+    authorize_scopes              = "openid email profile"
+    attributes_url                = "https://people.googleapis.com/v1/people/me?personFields="
+    attributes_url_add_attributes = "true"
+    authorize_url                 = "https://accounts.google.com/o/oauth2/v2/auth"
+    oidc_issuer                   = "https://accounts.google.com"
+    token_request_method          = "POST"
+    token_url                     = "https://www.googleapis.com/oauth2/v4/token"
+  }
+
+  attribute_mapping = {
+    email          = "email"
+    email_verified = "email_verified"
+    name           = "name"
+    username       = "sub"
   }
 }
 

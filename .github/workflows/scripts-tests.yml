@@ -1,4 +1,5 @@
-# Tests de los scripts de CI (guardia del plan, política de arranque). Sin filtro `paths`
+# Tests de los scripts de CI (guardia del plan, política de arranque) y de las Lambdas de
+# infra/modules (node --test, sin dependencias). Sin filtro `paths`
 # para que pueda ser un check requerido.
 name: Scripts tests
 
@@ -24,3 +25,7 @@ jobs:
           python-version: '3.11'
       - run: pip install pytest==8.3.3
       - run: python3 -m pytest .github/scripts -q
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test infra/modules/*/lambda/*/*.test.mjs
