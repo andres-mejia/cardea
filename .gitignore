@@ -33,3 +33,6 @@ tfplan.json
 
 # Ajustes locales de Claude Code
 .claude/settings.local.json
+
+# Credenciales locales (OAuth de Google, etc.): nunca al repo
+.credentials/
