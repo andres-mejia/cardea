@@ -1,7 +1,7 @@
 # Identidad del panel (portado de Fenora, reducido): pool con correo como usuario,
-# cliente público con PKCE y Hosted UI en dominio de prefijo. Sin IdP sociales,
-# passkeys ni triggers: los atributos de tenant y la federación con el IdP del
-# cliente llegan con la spec 002.
+# cliente público con PKCE y Hosted UI en dominio de prefijo. Google como IdP social
+# opcional, con el cliente OAuth leído de Secrets Manager. Sin passkeys ni triggers:
+# los atributos de tenant y la federación con el IdP del cliente llegan con la spec 002.
 
 terraform {
   required_providers {
@@ -18,6 +18,51 @@ variable "domain_prefix" {
 
 variable "callback_urls" { type = list(string) }
 variable "logout_urls" { type = list(string) }
+
+variable "google_oauth_secret_name" {
+  type        = string
+  default     = ""
+  description = "Secreto con {client_id, client_secret} del cliente OAuth de Google; vacío, sin Google."
+}
+
+locals {
+  google = var.google_oauth_secret_name != ""
+}
+
+# El valor acaba en el estado como cualquier provider_details: el estado está cifrado y
+# solo lo leen los roles de CI.
+data "aws_secretsmanager_secret_version" "google" {
+  count     = local.google ? 1 : 0
+  secret_id = var.google_oauth_secret_name
+}
+
+resource "aws_cognito_identity_provider" "google" {
+  count         = local.google ? 1 : 0
+  user_pool_id  = aws_cognito_user_pool.main.id
+  provider_name = "Google"
+  provider_type = "Google"
+
+  provider_details = {
+    client_id        = jsondecode(data.aws_secretsmanager_secret_version.google[0].secret_string).client_id
+    client_secret    = jsondecode(data.aws_secretsmanager_secret_version.google[0].secret_string).client_secret
+    authorize_scopes = "openid email profile"
+
+    # Valores que Cognito rellena por su cuenta: declarados para que el plan no derive.
+    attributes_url                = "https://people.googleapis.com/v1/people/me?personFields="
+    attributes_url_add_attributes = "true"
+    authorize_url                 = "https://accounts.google.com/o/oauth2/v2/auth"
+    oidc_issuer                   = "https://accounts.google.com"
+    token_request_method          = "POST"
+    token_url                     = "https://www.googleapis.com/oauth2/v4/token"
+  }
+
+  attribute_mapping = {
+    username       = "sub"
+    email          = "email"
+    email_verified = "email_verified"
+    name           = "name"
+  }
+}
 
 resource "aws_cognito_user_pool" "main" {
   name                     = "cardea-${var.environment}"
@@ -66,7 +111,7 @@ resource "aws_cognito_user_pool_client" "app" {
   user_pool_id                         = aws_cognito_user_pool.main.id
   generate_secret                      = false
   explicit_auth_flows                  = ["ALLOW_USER_SRP_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"]
-  supported_identity_providers         = ["COGNITO"]
+  supported_identity_providers         = local.google ? ["COGNITO", aws_cognito_identity_provider.google[0].provider_name] : ["COGNITO"]
   allowed_oauth_flows                  = ["code"]
   allowed_oauth_scopes                 = ["openid", "email", "profile"]
   allowed_oauth_flows_user_pool_client = true

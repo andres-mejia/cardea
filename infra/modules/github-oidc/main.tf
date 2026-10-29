@@ -39,6 +39,12 @@ variable "amplify_manual_deploy_app_arns" {
   description = "Apps de Amplify sin conexión a GitHub que se publican por despliegue manual desde CI."
 }
 
+variable "plan_readable_secrets" {
+  type        = list(string)
+  default     = []
+  description = "Nombres de secretos que Terraform lee como data source y el plan necesita leer."
+}
+
 variable "state_bucket" { type = string }
 variable "lock_table" { type = string }
 
@@ -193,6 +199,12 @@ resource "aws_iam_role_policy" "plan_state" {
     Version = "2012-10-17"
     Statement = [
       { Sid = "LeerEstado", Effect = "Allow", Action = ["s3:GetObject", "s3:ListBucket"], Resource = [local.state_arn, "${local.state_arn}/*"] },
+      {
+        Sid      = "LeerSecretosDeTerraform"
+        Effect   = "Allow"
+        Action   = ["secretsmanager:GetSecretValue"]
+        Resource = length(var.plan_readable_secrets) > 0 ? [for s in var.plan_readable_secrets : "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${s}-*"] : ["arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:ninguno"]
+      },
       { Sid = "Bloqueo", Effect = "Allow", Action = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem"], Resource = local.lock_arn },
       {
         # ReadOnlyAccess abre los planos de datos (objetos, ítems, secretos, mensajes,
@@ -212,13 +224,21 @@ resource "aws_iam_role_policy" "plan_state" {
         Sid    = "SinPlanosDeDatos"
         Effect = "Deny"
         Action = [
-          "secretsmanager:GetSecretValue", "ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath",
+          "ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath",
           "sqs:ReceiveMessage", "rds-db:connect", "rds-data:*",
           "cognito-idp:ListUsers", "cognito-idp:AdminGetUser", "cognito-idp:ListUsersInGroup",
           "logs:GetLogEvents", "logs:FilterLogEvents", "logs:StartQuery",
           "kinesis:GetRecords", "athena:GetQueryResults",
         ]
         Resource = "*"
+      },
+      {
+        # El plan lee los secretos que Terraform usa como data source; su valor ya está en
+        # el estado, que este rol lee. El resto de secretos sigue cerrado.
+        Sid         = "SinSecretosFueraDeTerraform"
+        Effect      = "Deny"
+        Action      = ["secretsmanager:GetSecretValue"]
+        NotResource = length(var.plan_readable_secrets) > 0 ? [for s in var.plan_readable_secrets : "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${s}-*"] : ["arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:ninguno"]
       },
       {
         Sid      = "SinEscrituras"
