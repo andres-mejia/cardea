@@ -45,14 +45,14 @@ export default function Desarrolladores() {
           </Anillo>
           <div>
             <div style={{ fontSize: 11.5, fontWeight: 600 }}>Con clave propia</div>
-            <div style={{ fontSize: 9.8, color: "#6B7C8C", marginTop: 2 }}>de {d.activos} usuarios activos</div>
+            <div style={{ fontSize: 9.8, color: "#5F7183", marginTop: 2 }}>de {d.activos} usuarios activos</div>
           </div>
         </div>
         <div className="c2" style={{ flex: 1, display: "flex", alignItems: "center", gap: 12 }}>
           <div className="ic w" style={{ width: 40, height: 40, borderRadius: 14 }}><Icono n="key" size={18} /></div>
           <div>
             <div className="num" style={{ fontSize: 20, lineHeight: 1 }}>{d.caducanSemana}</div>
-            <div style={{ fontSize: 9.8, color: "#6B7C8C", marginTop: 3 }}>claves caducan esta semana.<br />Se renuevan con el SSO.</div>
+            <div style={{ fontSize: 9.8, color: "#5F7183", marginTop: 3 }}>claves caducan esta semana.<br />Se renuevan con el SSO.</div>
           </div>
         </div>
       </div>
@@ -68,24 +68,24 @@ export default function Desarrolladores() {
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontSize: 11, fontWeight: 600 }}>Clave emitida para ti, válida 90 días en Claude Code, Codex y Copilot CLI</div>
             <div className="mono" style={{ fontSize: 10.5, marginTop: 3, wordBreak: "break-all" }}>{clave}</div>
-            <div style={{ fontSize: 9.5, color: "#6B7C8C", marginTop: 3 }}>Solo se muestra una vez. Clave de demostración: no da acceso a nada.</div>
+            <div style={{ fontSize: 9.5, color: "#5F7183", marginTop: 3 }}>Solo se muestra una vez. Clave de demostración: no da acceso a nada.</div>
           </div>
           <button type="button" className="pillbtn ghost" onClick={() => void navigator.clipboard?.writeText(clave)}>Copiar</button>
           <button type="button" className="chip line" onClick={() => setClave(null)}>Cerrar</button>
         </div>
       )}
-      <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gridAutoRows: "minmax(150px, 1fr)", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12 }}>
         {devs.map((x) => (
           <div key={x.nombre} className="dev">
             <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
               <Avatar i={x.avatar} size={34} />
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 11.5, fontWeight: 600 }}>{x.nombre}</div>
-                <div style={{ fontSize: 9.5, color: "#6B7C8C" }}>{x.equipo}</div>
+                <div style={{ fontSize: 9.5, color: "#5F7183" }}>{x.equipo}</div>
               </div>
               <div style={{ marginLeft: "auto", textAlign: "right" }}>
                 <div className="num" style={{ fontSize: 14 }}>{eur(x.gasto)}</div>
-                <div style={{ fontSize: 8.8, color: "#7A8A99" }}>este mes</div>
+                <div style={{ fontSize: 8.8, color: "#5F7183" }}>este mes</div>
               </div>
             </div>
             <Area vals={x.serie} w={200} h={48} line={TEAL} fill="rgba(10,111,125,.10)" sw={1.6} pad={4} />

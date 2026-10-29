@@ -46,7 +46,8 @@ img { max-width: 100%; height: auto; display: block; }
 .section.alt { background: var(--cardea-niebla); }
 .section.dark { background: var(--cardea-tinta); color: #ffffff; }
 .section.dark p { color: #cfe4e8; }
-.kicker { font-size: 13px; font-weight: 500; color: var(--cardea-petroleo); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 14px; }
+/* Antetítulo discreto, en texto normal: las mayúsculas espaciadas en cada sección son plantilla. */
+.kicker { font-size: 15px; font-weight: 500; color: var(--cardea-petroleo); margin-bottom: 10px; }
 .section.dark .kicker { color: var(--cardea-petroleo-claro); }
 .lead { font-size: clamp(17px, 1.6vw, 20px); max-width: 640px; margin-top: 16px; }
 
@@ -85,3 +86,6 @@ img { max-width: 100%; height: auto; display: block; }
 .legal ul { padding-left: 20px; list-style: disc; }
 .legal li + li { margin-top: 6px; }
 .legal a { text-decoration: underline; }
+
+/* Tarjetas: el título no va pegado al cuerpo. */
+.card h3 + p { margin-top: 10px; }

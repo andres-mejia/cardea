@@ -52,7 +52,7 @@ export default function PanelGeneral() {
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
             <Donut segs={d.canales.map((c, i): [number, string] => [c.valor, COLORES_CANAL[i] ?? INK])} size={104} thick={15}>
               <div className="num" style={{ fontSize: 15 }}>{d.canales.length}</div>
-              <div style={{ fontSize: 8.5, color: "#6B7C8C" }}>canales</div>
+              <div style={{ fontSize: 8.5, color: "#5F7183" }}>canales</div>
             </Donut>
             <div style={{ flex: 1 }}>
               {d.canales.map((c, i) => (
@@ -72,7 +72,7 @@ export default function PanelGeneral() {
           <div key={k.etiqueta} className="c2" style={{ flex: 1, display: "flex", alignItems: "center", gap: 10, padding: "11px 14px" }}>
             <div className={`ic ${k.clase}`}><Icono n={k.icono as NombreIcono} size={15} /></div>
             <div>
-              <div style={{ fontSize: 9.8, color: "#6B7C8C" }}>{k.etiqueta}</div>
+              <div style={{ fontSize: 9.8, color: "#5F7183" }}>{k.etiqueta}</div>
               <div className="num" style={{ fontSize: 19, lineHeight: 1.15 }}>{k.valor}</div>
             </div>
             <div style={{ marginLeft: "auto", width: 74, textAlign: "right" }}>

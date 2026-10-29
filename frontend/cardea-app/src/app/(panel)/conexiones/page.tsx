@@ -35,8 +35,8 @@ function Mapa({ colectores, proveedores }: { colectores: Datos["colectores"]; pr
         <path d="M 72 72 A 34 34 0 1 1 72 24" fill="none" stroke="#fff" strokeWidth={11} />
         <circle cx={48} cy={48} r={10} fill={TEAL_L} />
       </g>
-      <text x={64} y={290} textAnchor="middle" style={{ fontSize: 9.5, fill: "#6B7C8C" }}>Collectors e identidad</text>
-      <text x={316} y={290} textAnchor="middle" style={{ fontSize: 9.5, fill: "#6B7C8C" }}>Proveedores de modelos</text>
+      <text x={64} y={290} textAnchor="middle" style={{ fontSize: 9.5, fill: "#5F7183" }}>Collectors e identidad</text>
+      <text x={316} y={290} textAnchor="middle" style={{ fontSize: 9.5, fill: "#5F7183" }}>Proveedores de modelos</text>
     </svg>
   );
 }

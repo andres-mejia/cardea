@@ -13,7 +13,7 @@
   --color-cardea-niebla: #eef2f5;
   --color-cardea-niebla-2: #e6ecf1;
   --color-cardea-texto: #3b4f63;
-  --color-cardea-texto-suave: #6b7c8c;
+  --color-cardea-texto-suave: #5F7183;
   --color-cardea-linea: #d5dee6;
   --color-estado-permitida: #2e7d4f;
   --color-estado-aviso: #c7791a;
@@ -28,8 +28,11 @@ h1, h2, h3 { font-weight: 600; letter-spacing: -0.02em; }
 
 /* ── Interfaz del pitch (docs/pitch/pitch_ui.py, APP_CSS) ─────────────────────
    Mismos tamaños que el pitch; el layout del panel escala el conjunto con `zoom`. */
-.app { display: flex; background: #eef2f5; zoom: 1.18; min-height: calc(100vh / 1.18); }
-.sb { width: 166px; flex: none; margin: 10px 0 10px 10px; background: #12263a; border-radius: 18px; padding: 14px 10px 10px; display: flex; flex-direction: column; color: #afc0cf; font-size: 11.5px; position: sticky; top: 10px; height: calc(100vh / 1.18 - 20px); }
+/* Escala según la pantalla: los tamaños del pitch son de diapositiva y se leen pequeños en un proyector. */
+.app { --z: 1.2; display: flex; background: #eef2f5; zoom: var(--z); min-height: calc(100vh / var(--z)); }
+@media (min-width: 1600px) { .app { --z: 1.32; } }
+@media (min-width: 1900px) { .app { --z: 1.45; } }
+.sb { width: 166px; flex: none; margin: 10px 0 10px 10px; background: #12263a; border-radius: 18px; padding: 14px 10px 10px; display: flex; flex-direction: column; color: #afc0cf; font-size: 11.5px; position: sticky; top: 10px; height: calc(100vh / var(--z) - 20px); }
 .sb .brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 600; font-size: 16px; letter-spacing: -0.02em; padding: 2px 8px 8px; }
 .sb .grp { font-size: 9.5px; color: #7c93a6; padding: 12px 8px 5px; }
 .sb a { display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: 10px; margin-bottom: 2px; }
@@ -37,13 +40,13 @@ h1, h2, h3 { font-weight: 600; letter-spacing: -0.02em; }
 .sb a.on { background: #223e57; color: #fff; }
 .sb a .cnt { margin-left: auto; font-size: 9px; background: #6ccbd3; color: #12263a; border-radius: 999px; padding: 1px 6px; font-weight: 600; }
 .sb .me { margin-top: auto; background: #1b334a; border-radius: 13px; padding: 8px; display: flex; gap: 8px; align-items: center; }
-.sb .me b { display: block; color: #fff; font-size: 11px; font-weight: 600; }
+.sb .me b { display: block; color: #fff; font-size: 11px; font-weight: 600; line-height: 1.25; }
 .sb .me span { font-size: 9.5px; color: #8ea3b5; }
 .mainw { flex: 1; min-width: 0; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
 .tb { display: flex; align-items: center; gap: 9px; flex: none; }
 .tb h3 { font-size: 19px; line-height: 1.1; }
-.tb .sub { font-size: 10.5px; color: #6b7c8c; margin-top: 2px; }
-.srch { white-space: nowrap; margin-left: auto; display: flex; align-items: center; gap: 7px; background: #fff; border-radius: 999px; padding: 7px 9px 7px 12px; font-size: 10.5px; color: #7a8a99; width: 208px; }
+.tb .sub { font-size: 10.5px; color: #5F7183; margin-top: 2px; }
+.srch { white-space: nowrap; margin-left: auto; display: flex; align-items: center; gap: 7px; background: #fff; border-radius: 999px; padding: 7px 9px 7px 12px; font-size: 10.5px; color: #5F7183; width: 208px; }
 .kbd { white-space: nowrap; margin-left: auto; font-size: 9px; background: #eef2f5; border-radius: 6px; padding: 2px 6px; color: #566878; }
 .ib { width: 31px; height: 31px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #12263a; position: relative; flex: none; }
 .ib.pri { background: #0a6f7d; color: #fff; }
@@ -51,7 +54,7 @@ h1, h2, h3 { font-weight: 600; letter-spacing: -0.02em; }
 .c2 { background: #fff; border-radius: 18px; padding: 14px 16px; min-width: 0; }
 .c2.dark { background: #12263a; color: #fff; }
 .c2 h4 { font-size: 12px; font-weight: 600; margin-bottom: 9px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.c2 h4 > span { font-weight: 400; font-size: 10px; color: #7a8a99; }
+.c2 h4 > span { font-weight: 400; font-size: 10px; color: #5F7183; }
 .r2 { display: flex; gap: 12px; min-height: 0; }
 .chip { display: inline-flex; align-items: center; gap: 4px; font-size: 9.8px; border-radius: 999px; padding: 3px 9px; white-space: nowrap; flex: none; }
 .chip.ok { background: #e3f1e8; color: #1f6b40; } .chip.warn { background: #fbefd9; color: #8a5306; }
@@ -67,7 +70,7 @@ button.chip.line:hover { box-shadow: inset 0 0 0 1px #0a6f7d; color: #0a6f7d; }
 .ic.m { background: #e9eef2; color: #566878; } .ic.g { background: #e3f1e8; color: #1f6b40; } .ic.k { background: #12263a; color: #fff; }
 .li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #eef2f5; font-size: 11px; }
 .li:last-child { border-bottom: none; padding-bottom: 0; }
-.li .tx { min-width: 0; flex: 1; } .li .tx b { font-weight: 600; display: block; } .li .tx span { font-size: 9.8px; color: #6b7c8c; }
+.li .tx { min-width: 0; flex: 1; } .li .tx b { font-weight: 600; display: block; } .li .tx span { font-size: 9.8px; color: #5F7183; }
 .num { font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .lg { display: flex; align-items: center; gap: 6px; font-size: 10.3px; color: #3b4f63; padding: 3px 0; white-space: nowrap; }
 .lg i { width: 9px; height: 9px; border-radius: 3px; display: block; flex: none; } .lg b { margin-left: auto; font-weight: 600; color: #12263a; font-variant-numeric: tabular-nums; }
@@ -75,7 +78,7 @@ button.chip.line:hover { box-shadow: inset 0 0 0 1px #0a6f7d; color: #0a6f7d; }
 .tog::after { content: ""; position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: #fff; transition: left .15s; }
 .tog.on { background: #0a6f7d; } .tog.on::after { left: 15px; }
 .node { display: flex; align-items: flex-start; gap: 10px; background: #f4f7f9; border-radius: 14px; padding: 9px 11px; font-size: 10.8px; position: relative; }
-.node small { display: block; font-size: 9.3px; color: #6b7c8c; margin-bottom: 2px; }
+.node small { display: block; font-size: 9.3px; color: #5F7183; margin-bottom: 2px; }
 .enlace { width: 2px; height: 12px; background: #c9d3dc; margin-left: 25px; }
 .redact { background: #12263a; color: #fff; border-radius: 5px; padding: 0 5px; font-size: 9.3px; }
 .quote { background: #f4f7f9; border-radius: 12px; padding: 9px 11px; font-size: 10.6px; line-height: 1.5; }
@@ -88,7 +91,7 @@ button.chip.line:hover { box-shadow: inset 0 0 0 1px #0a6f7d; color: #0a6f7d; }
 .tl div::before { content: ""; position: absolute; left: -18px; top: 3px; width: 8px; height: 8px; border-radius: 50%; background: #0a6f7d; }
 .tl div::after { content: ""; position: absolute; left: -15px; top: 13px; bottom: -1px; width: 2px; background: #d5dee6; }
 .tl div:last-child::after { display: none; }
-.tl span { color: #6b7c8c; font-size: 9.5px; margin-left: 6px; }
+.tl span { color: #5F7183; font-size: 9.5px; margin-left: 6px; }
 .dev { background: #fff; border-radius: 18px; padding: 13px 14px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; min-width: 0; }
 .mono { font-family: ui-monospace, "DejaVu Sans Mono", monospace; }
 .fila { cursor: pointer; } .fila:hover { background: #f7fafb; }
@@ -96,3 +99,5 @@ button.chip.line:hover { box-shadow: inset 0 0 0 1px #0a6f7d; color: #0a6f7d; }
 /* Tailwind 4 deja los botones con el cursor por defecto: se recupera la mano. */
 button:not(:disabled), [role="button"]:not([aria-disabled="true"]), [role="switch"], [role="tab"], summary, label[for] { cursor: pointer; }
 button:disabled { cursor: not-allowed; }
+.ib:hover { box-shadow: inset 0 0 0 1px #0a6f7d; }
+.ib.pri:hover { background: #085763; box-shadow: none; }

@@ -98,7 +98,7 @@ export default function Politicas() {
                 </div>
                 <div style={{ textAlign: "right", flex: "none" }}>
                   <div className="num" style={{ fontSize: 12.5 }}>{miles(r.aciertos)}</div>
-                  <div style={{ fontSize: 8.6, color: "#7A8A99" }}>este mes</div>
+                  <div style={{ fontSize: 8.6, color: "#5F7183" }}>este mes</div>
                 </div>
                 <span className={`chip ${r.activa ? r.tono : "mute"}`}>{r.activa ? r.estado : r.estado === "Borrador" ? "Borrador" : "Pausada"}</span>
                 <button
@@ -121,7 +121,7 @@ export default function Politicas() {
           <Flujo regla={regla} detecta={d.detecta} />
           {regla.categoria === "Datos" && (
             <div className="quote" style={{ marginTop: 10 }}>
-              <div style={{ fontSize: 9.3, color: "#6B7C8C", marginBottom: 3 }}>
+              <div style={{ fontSize: 9.3, color: "#5F7183", marginBottom: 3 }}>
                 Prueba con un ejemplo{prueba.cuenta > 0 ? `: ${prueba.cuenta} datos sustituidos` : ""}
               </div>
               {editando ? (

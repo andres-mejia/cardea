@@ -54,7 +54,7 @@ export default function Evidencias() {
           <h4 style={{ alignSelf: "stretch" }}>Cobertura</h4>
           <Donut segs={[[cubiertos, TEAL], [parciales, WARN], [no, BAD]]} size={118} thick={16}>
             <div className="num" style={{ fontSize: 20, lineHeight: 1 }}>{cubiertos} de {d.controles.length}</div>
-            <div style={{ fontSize: 8.8, color: "#6B7C8C", marginTop: 3 }}>controles cubiertos</div>
+            <div style={{ fontSize: 8.8, color: "#5F7183", marginTop: 3 }}>controles cubiertos</div>
           </Donut>
           <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
             <span className="lg" style={{ padding: 0 }}><i style={{ background: TEAL }} />Cubierto</span>
@@ -88,7 +88,7 @@ export default function Evidencias() {
                     </div>
                     <div style={{ height: 2, flex: 1, background: n < 4 ? (hecho ? TEAL : "#C9D3DC") : "transparent", borderRadius: 1 }} />
                   </div>
-                  <div style={{ fontSize: 9.3, color: "#6B7C8C", marginTop: 6 }}>{p.clave}</div>
+                  <div style={{ fontSize: 9.3, color: "#5F7183", marginTop: 6 }}>{p.clave}</div>
                   <div style={{ fontSize: 10.4, fontWeight: 600, lineHeight: 1.3, paddingRight: 8 }}>{p.valor}</div>
                 </div>
               );
@@ -98,7 +98,7 @@ export default function Evidencias() {
             <button type="button" className="pillbtn" onClick={generar} disabled={!!generando}>
               <Icono n="file" size={11} />{generando ? "Generando…" : "Generar informe"}
             </button>
-            <span style={{ fontSize: 9.5, color: "#6B7C8C" }}>Incluye lo no cubierto, para que nadie lo dé por supuesto.</span>
+            <span style={{ fontSize: 9.5, color: "#5F7183" }}>Incluye lo no cubierto, para que nadie lo dé por supuesto.</span>
           </div>
         </div>
         <div className="c2" style={{ flex: 1 }}>
