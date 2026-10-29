@@ -1,22 +1,43 @@
-import { Bell, Plus } from "lucide-react";
+import { Avatar, Icono } from "./graficos";
 
+/** Barra superior del pitch. La etiqueta avisa de que las cifras son ilustrativas (AGENTS.md §3). */
 export function Cabecera({ titulo, subtitulo }: { titulo: string; subtitulo?: string }) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="tb">
       <div>
-        <h1 className="text-[22px] leading-tight">{titulo}</h1>
-        {subtitulo && <div className="mt-0.5 text-[12.5px] text-cardea-texto-suave">{subtitulo}</div>}
+        <h3>{titulo}</h3>
+        {subtitulo && <div className="sub">{subtitulo}</div>}
       </div>
-      <div className="ml-auto hidden w-[240px] items-center gap-2 rounded-full bg-white px-4 py-2 text-[12.5px] text-cardea-texto-suave md:flex">
+      <span className="chip ilustrativo ml-3" title="Las cifras de esta pantalla son de demostración">
+        Datos ilustrativos
+      </span>
+      <div className="srch">
+        <Icono n="search" size={12} />
         Buscar o ejecutar
-        <span className="ml-auto rounded-md bg-cardea-niebla px-1.5 py-0.5 text-[10px] text-cardea-texto">Ctrl K</span>
+        <span className="kbd">Ctrl K</span>
       </div>
-      <button type="button" aria-label="Crear" className="grid size-9 place-items-center rounded-full bg-cardea-petroleo text-white">
-        <Plus size={16} strokeWidth={2.2} />
+      <button type="button" aria-label="Crear" className="ib pri">
+        <Icono n="plus" size={15} sw={2.2} />
       </button>
-      <button type="button" aria-label="Avisos" className="grid size-9 place-items-center rounded-full bg-white text-cardea-tinta">
-        <Bell size={15} />
+      <button type="button" aria-label="Claves" className="ib">
+        <Icono n="key" size={14} />
       </button>
+      <button type="button" aria-label="Descargas" className="ib">
+        <Icono n="down" size={14} />
+      </button>
+      <button type="button" aria-label="Avisos" className="ib">
+        <Icono n="bell" size={14} />
+        <span className="dot">3</span>
+      </button>
+      <Avatar i={0} size={31} />
+    </div>
+  );
+}
+
+export function Cargando() {
+  return (
+    <div className="flex flex-1 items-center justify-center text-[11px] text-cardea-texto-suave" role="status">
+      Cargando…
     </div>
   );
 }

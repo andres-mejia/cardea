@@ -1,31 +1,28 @@
-import type { LucideIcon } from "lucide-react";
-import { Activity, BarChart3, FileCheck2, LayoutGrid, Plug, Shield, Users } from "lucide-react";
-
-export type Seccion = { nombre: string; href: string; icono: LucideIcon };
+/** Misma navegación que el pitch: Visión, Control, Cumplimiento. */
+export type Seccion = { nombre: string; href: string; icono: string; contador?: string };
 export type Grupo = { titulo: string; secciones: Seccion[] };
 
-/** Misma navegación que el pitch: Visión, Control, Cumplimiento. */
 export const NAVEGACION: Grupo[] = [
   {
     titulo: "Visión",
     secciones: [
-      { nombre: "Panel general", href: "/", icono: LayoutGrid },
-      { nombre: "Costes", href: "/costes", icono: BarChart3 },
-      { nombre: "Actividad", href: "/actividad", icono: Activity },
+      { nombre: "Panel general", href: "/", icono: "grid" },
+      { nombre: "Costes", href: "/costes", icono: "bars" },
+      { nombre: "Actividad", href: "/actividad", icono: "pulse", contador: "342" },
     ],
   },
   {
     titulo: "Control",
     secciones: [
-      { nombre: "Políticas", href: "/politicas", icono: Shield },
-      { nombre: "Desarrolladores", href: "/desarrolladores", icono: Users },
+      { nombre: "Políticas", href: "/politicas", icono: "shield" },
+      { nombre: "Desarrolladores", href: "/desarrolladores", icono: "users" },
     ],
   },
   {
     titulo: "Cumplimiento",
     secciones: [
-      { nombre: "Evidencias", href: "/evidencias", icono: FileCheck2 },
-      { nombre: "Conexiones", href: "/conexiones", icono: Plug },
+      { nombre: "Evidencias", href: "/evidencias", icono: "file" },
+      { nombre: "Conexiones", href: "/conexiones", icono: "plug", contador: "1" },
     ],
   },
 ];
