@@ -1,0 +1,28 @@
+# Formato de Terraform en todo PR (portado de Fenora). Sin filtro `paths`: un check
+# requerido que no corre deja el PR esperando para siempre.
+name: Infra formato
+
+on:
+  pull_request:
+
+concurrency:
+  group: infra-formato-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  formato:
+    name: infra · formato
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: 1.9.8
+          terraform_wrapper: false
+      - name: terraform fmt -check -recursive
+        working-directory: infra
+        run: terraform fmt -check -diff -recursive
