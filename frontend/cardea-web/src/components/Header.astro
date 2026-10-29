@@ -1,30 +1,72 @@
 ---
 import Marca from "./Marca.astro";
-const appUrl = import.meta.env.PUBLIC_APP_URL ?? "https://cardea-app.tekhos.com";
+import { t, path, other, type Lang, type RouteKey } from "../i18n";
+interface Props { lang: Lang; route: RouteKey }
+const { lang, route } = Astro.props;
+const d = t(lang);
+const appUrl = import.meta.env.PUBLIC_APP_URL || "https://cardea-app.tekhos.com";
+const home = path("home", lang);
+// En la portada, anclas locales; en el resto, a la portada del mismo idioma.
+const a = (id: string) => (route === "home" ? `#${id}` : `${home}#${id}`);
+const alt = other(lang);
+const altHref = path(route, alt);
 ---
-<header class="hdr">
+<header class="hdr" transition:animate="none">
   <div class="wrap row">
-    <Marca size={30} />
-    <nav aria-label="Secciones">
-      <a href="#que-hace">Qué hace</a>
-      <a href="#pantallas">Pantallas</a>
-      <a href="#alcance">Alcance</a>
-      <a href="#instalacion">Instalación</a>
+    <Marca size={30} href={home} label={d.ui.home} animate />
+    <nav class="secciones" aria-label={d.ui.nav}>
+      <a href={a("que-hace")}>{d.ui.sections.what}</a>
+      <a href={a("pantallas")}>{d.ui.sections.screens}</a>
+      <a href={a("alcance")}>{d.ui.sections.scope}</a>
+      <a href={a("instalacion")}>{d.ui.sections.install}</a>
     </nav>
     <div class="acciones">
-      <a class="btn btn-ghost" href={appUrl}>Entrar</a>
-      <a class="btn btn-primary" href="#demo">Pedir una demo</a>
+      <div class="idioma" role="group" aria-label={d.ui.language}>
+        <span class="lang-actual" aria-current="true" lang={lang} title={d.ui.thisLanguage.label}>{d.ui.thisLanguage.code}</span>
+        <a class="lang-otro" href={altHref} hreflang={alt} lang={alt} title={d.ui.otherLanguage.hint} aria-label={d.ui.otherLanguage.label}>{d.ui.otherLanguage.code}</a>
+      </div>
+      <a class="entrar" href={appUrl} aria-label={d.ui.signInLabel}>{d.ui.signIn}</a>
+      <a class="btn btn-primary demo" href={a("demo")}><span class="largo">{d.ui.demo}</span><span class="corto">{d.ui.demoShort}</span></a>
     </div>
   </div>
 </header>
 <style>
-  .hdr { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,.86); backdrop-filter: blur(10px); border-bottom: 1px solid var(--cardea-linea); }
+  /* Cabecera de cristal: deja ver el contenido al pasar por debajo, con un filete de luz arriba. */
+  .hdr {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(255, 255, 255, .72); /* taste-skill-ignore: cabecera de cristal pedida en el brief */
+    -webkit-backdrop-filter: blur(16px) saturate(1.5); /* taste-skill-ignore: única barra fija */
+    backdrop-filter: blur(16px) saturate(1.5); /* taste-skill-ignore: única barra fija */
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 1px 0 rgba(18, 38, 58, .08); /* taste-skill-ignore: borde de la barra fija */
+  }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .hdr { background: rgba(255, 255, 255, .97); } } /* taste-skill-ignore: respaldo sin blur */
   .row { display: flex; align-items: center; gap: 28px; height: 68px; }
-  nav { display: flex; gap: 6px; font-size: 15px; color: var(--cardea-texto); margin-left: 8px; }
-  nav a { padding: 10px 10px; border-radius: 8px; }
-  nav a:hover { color: var(--cardea-tinta); background: var(--cardea-niebla); }
-  .acciones { margin-left: auto; display: flex; gap: 8px; }
-  .acciones .btn { min-height: 44px; padding: 10px 18px; font-size: 14.5px; }
-  @media (max-width: 860px) { nav { display: none; } .row { gap: 12px; } .acciones .btn { padding: 10px 14px; } }
-  @media (max-width: 360px) { .acciones .btn-ghost { box-shadow: none; padding: 10px 8px; } }
+  .secciones { display: flex; gap: 2px; font-size: 15px; color: var(--cardea-texto); margin-left: 8px; }
+  .secciones a { padding: 10px 11px; border-radius: 8px; transition: color var(--t-hover) ease, background-color var(--t-hover) ease; }
+  .secciones a:hover { color: var(--cardea-tinta); background: rgba(18, 38, 58, .05); }
+  .acciones { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+
+  .idioma { display: inline-flex; align-items: center; padding: 3px; border-radius: 999px; background: rgba(18, 38, 58, .05); font-size: 13px; font-weight: 600; letter-spacing: .02em; margin-right: 6px; }
+  .idioma > * { min-width: 38px; height: 32px; display: grid; place-items: center; border-radius: 999px; padding: 0 8px; }
+  .lang-actual { background: #ffffff; color: var(--cardea-tinta); }
+  .lang-otro { color: var(--cardea-texto-suave); position: relative; transition: color var(--t-hover) ease; }
+  .lang-otro::after { content: ""; position: absolute; inset: -6px -2px; }
+  .lang-otro:hover { color: var(--cardea-tinta); }
+
+  .entrar { display: inline-flex; align-items: center; min-height: 44px; padding: 10px 14px; border-radius: 999px; font-size: 15px; font-weight: 500; color: var(--cardea-petroleo); transition: background-color var(--t-hover) ease; }
+  .entrar:hover { background: rgba(10, 111, 125, .08); }
+  .demo { min-height: 44px; padding: 10px 18px; font-size: 14.5px; }
+  .corto { display: none; }
+
+  @media (max-width: 960px) { .secciones { display: none; } .row { gap: 12px; } }
+  @media (max-width: 560px) {
+    .row { height: 60px; }
+    .idioma > .lang-actual { display: none; }
+    .idioma { padding: 0; background: transparent; margin-right: 0; }
+    .idioma > .lang-otro { min-width: 40px; height: 40px; background: var(--cardea-niebla); color: var(--cardea-tinta); }
+    .entrar { padding: 10px 10px; }
+    .demo { padding: 10px 16px; }
+    .largo { display: none; }
+    .corto { display: inline; }
+  }
 </style>

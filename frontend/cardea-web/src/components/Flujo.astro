@@ -1,0 +1,302 @@
+---
+/**
+ * Flujo del hero: peticiones de aplicaciones, CLIs y tools MCP que pasan por Cardea y salen hacia los
+ * proveedores. Las líneas y los paquetes los dibuja el script a partir de la posición real de los nodos,
+ * así que sirve igual en horizontal (escritorio) que en vertical (móvil). Sin script o con movimiento
+ * reducido se ve el esquema y las tres últimas decisiones, quietas.
+ * Los colores solo marcan decisiones, como en el panel: redactada (petróleo) y bloqueada (rojo).
+ */
+import Isotipo from "./Isotipo.astro";
+import { t, type Lang } from "../i18n";
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const d = t(lang);
+const f = d.flow;
+
+type Ev = (typeof f.events)[number];
+// Qué comprobación se ilumina con cada decisión: datos personales, modelo y tool, o presupuesto.
+const check = (e: Ev) => (e.outcome === "redacted" ? 1 : e.outcome === "blocked" ? (e.src === "mcp" ? 2 : 3) : -1);
+const ruta = (e: Ev) => `${f.srcName[e.src as keyof typeof f.srcName]} · ${e.team} → ${f.dstName[e.dst as keyof typeof f.dstName]}`;
+const eventos = f.events.map((e) => ({ src: e.src, dst: e.dst, o: e.outcome, c: check(e), r: ruta(e), why: e.why, label: f.outcomes[e.outcome as keyof typeof f.outcomes] }));
+const iniciales = eventos.slice(0, 3).reverse();
+---
+<figure class="flujo on-dark" data-flujo data-ui data-eventos={JSON.stringify(eventos)}>
+  <div class="escena" data-escena>
+    <svg class="lineas" data-lineas aria-hidden="true" focusable="false"></svg>
+
+    <ul class="col origen" aria-label={f.label}>
+      {f.sources.map((s) => (
+        <li class="nodo" data-src={s.id}><span class="nodo-t">{s.t}</span><span class="nodo-s">{s.s}</span></li>
+      ))}
+    </ul>
+
+    <div class="puerta" data-puerta>
+      <div class="puerta-cab">
+        <Isotipo size={28} dark />
+        <div>
+          <p class="puerta-t">{f.gate.t}</p>
+          <p class="puerta-s">{f.gate.s}</p>
+        </div>
+      </div>
+      <ul class="checks">
+        {f.gate.checks.map((c, i) => <li data-check={i}><span class="check-p" aria-hidden="true"></span>{c}</li>)}
+      </ul>
+      <div class="registro">
+        <p class="registro-t">{f.logTitle}</p>
+        <ol data-registro>
+          {iniciales.map((e) => (
+            <li class="ev" data-o={e.o}>
+              <span class="ev-p" aria-hidden="true"></span>
+              <span class="ev-r">{e.r}</span>
+              <span class="ev-d">{e.label}</span>
+              {e.why && <span class="ev-w">{e.why}</span>}
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+
+    <ul class="col destino">
+      {f.targets.map((x) => (
+        <li class="nodo" data-dst={x.id}><span class="nodo-t">{x.t}</span></li>
+      ))}
+    </ul>
+  </div>
+  <figcaption>
+    <span class="sr-only">{f.caption}</span>
+    <ul class="leyenda" aria-hidden="true">
+      <li data-o="ok">{f.outcomes.ok}</li>
+      <li data-o="redacted">{f.outcomes.redacted}</li>
+      <li data-o="blocked">{f.outcomes.blocked}</li>
+    </ul>
+    <span class="ilustrativo">{d.ui.illustrative}</span>
+  </figcaption>
+</figure>
+
+<script>
+  type Ev = { src: string; dst: string; o: "ok" | "redacted" | "blocked"; c: number; r: string; why: string; label: string };
+  type Paquete = { g: SVGGElement; ev: Ev; fase: "in" | "hold" | "out" | "fin"; t0: number; dur: number; path: SVGPathElement };
+
+  const NS = "http://www.w3.org/2000/svg";
+  // Mismo criterio que el panel: permitida en neutro, redactada en petróleo, bloqueada en rojo.
+  const COLOR = { ok: "#bfd3dd", redacted: "#6ccbd3", blocked: "#b3362b" } as const;
+  let parar: (() => void) | undefined;
+
+  function iniciar() {
+    parar?.();
+    const root = document.querySelector<HTMLElement>("[data-flujo]");
+    if (!root) return;
+    const escena = root.querySelector<HTMLElement>("[data-escena]")!;
+    const svg = root.querySelector<SVGSVGElement>("[data-lineas]")!;
+    const puerta = root.querySelector<HTMLElement>("[data-puerta]")!;
+    const registro = root.querySelector<HTMLOListElement>("[data-registro]")!;
+    const checks = Array.from(root.querySelectorAll<HTMLElement>("[data-check]"));
+    const eventos: Ev[] = JSON.parse(root.dataset.eventos || "[]");
+    const srcs = new Map(Array.from(root.querySelectorAll<HTMLElement>("[data-src]")).map((el) => [el.dataset.src!, el]));
+    const dsts = new Map(Array.from(root.querySelectorAll<HTMLElement>("[data-dst]")).map((el) => [el.dataset.dst!, el]));
+    const entradas = new Map<string, SVGPathElement>();
+    const salidas = new Map<string, SVGPathElement>();
+    const capaPaquetes = document.createElementNS(NS, "g");
+
+    // Traza una curva en S de cada origen al centro de la puerta y del centro a cada destino.
+    function trazar() {
+      const r = escena.getBoundingClientRect();
+      if (!r.width) return;
+      svg.setAttribute("viewBox", `0 0 ${r.width} ${r.height}`);
+      svg.setAttribute("width", String(r.width));
+      svg.setAttribute("height", String(r.height));
+      const rel = (el: Element) => { const b = el.getBoundingClientRect(); return { l: b.left - r.left, t: b.top - r.top, r: b.right - r.left, b: b.bottom - r.top, cx: b.left - r.left + b.width / 2, cy: b.top - r.top + b.height / 2 }; };
+      const g = rel(puerta);
+      const vertical = rel(srcs.values().next().value!).b < g.t;
+      const curva = (x1: number, y1: number, x2: number, y2: number) =>
+        vertical
+          ? `M${x1},${y1} C${x1},${y1 + (y2 - y1) * 0.5} ${x2},${y1 + (y2 - y1) * 0.5} ${x2},${y2}`
+          : `M${x1},${y1} C${x1 + (x2 - x1) * 0.5},${y1} ${x1 + (x2 - x1) * 0.5},${y2} ${x2},${y2}`;
+      const linea = (map: Map<string, SVGPathElement>, id: string, d: string) => {
+        let p = map.get(id);
+        if (!p) { p = document.createElementNS(NS, "path"); p.setAttribute("class", "linea"); svg.insertBefore(p, capaPaquetes); map.set(id, p); }
+        p.setAttribute("d", d);
+      };
+      for (const [id, el] of srcs) { const s = rel(el); linea(entradas, id, vertical ? curva(s.cx, s.b, g.cx, g.cy) : curva(s.r, s.cy, g.cx, g.cy)); }
+      for (const [id, el] of dsts) { const x = rel(el); linea(salidas, id, vertical ? curva(g.cx, g.cy, x.cx, x.t) : curva(g.cx, g.cy, x.l, x.cy)); }
+    }
+    svg.appendChild(capaPaquetes);
+    trazar();
+    const ro = new ResizeObserver(() => trazar());
+    ro.observe(escena);
+
+    const quieto = matchMedia("(prefers-reduced-motion: reduce)");
+    if (quieto.matches) { parar = () => ro.disconnect(); return; }
+
+    const paquetes: Paquete[] = [];
+    let reloj = 0, ultimo = 0, proximo = 400, indice = 3, visible = false, raf = 0;
+    const suave = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+    const destello = (el: Element | undefined, clase: string, ms: number) => { if (!el) return; el.classList.add(clase); setTimeout(() => el.classList.remove(clase), ms); };
+
+    function crear(ev: Ev) {
+      const g = document.createElementNS(NS, "g");
+      g.setAttribute("class", "paquete");
+      const halo = document.createElementNS(NS, "circle"); halo.setAttribute("r", "11"); halo.setAttribute("class", "halo");
+      const punto = document.createElementNS(NS, "circle"); punto.setAttribute("r", "5"); punto.setAttribute("class", "punto");
+      g.append(halo, punto);
+      g.style.setProperty("--c", COLOR.ok);
+      capaPaquetes.appendChild(g);
+      const path = entradas.get(ev.src)!;
+      destello(srcs.get(ev.src), "activo", 700);
+      destello(path, "activa", 1300);
+      paquetes.push({ g, ev, fase: "in", t0: reloj, dur: 1250, path });
+    }
+
+    function anotar(ev: Ev) {
+      const li = document.createElement("li");
+      li.className = "ev nuevo";
+      li.dataset.o = ev.o;
+      li.innerHTML = `<span class="ev-p" aria-hidden="true"></span><span class="ev-r"></span><span class="ev-d"></span>${ev.why ? '<span class="ev-w"></span>' : ""}`;
+      li.querySelector(".ev-r")!.textContent = ev.r;
+      li.querySelector(".ev-d")!.textContent = ev.label;
+      if (ev.why) li.querySelector(".ev-w")!.textContent = ev.why;
+      registro.prepend(li);
+      while (registro.children.length > 3) registro.lastElementChild!.remove();
+      if (ev.c >= 0) { checks[ev.c].dataset.o = ev.o; destello(checks[ev.c], "on", 900); }
+      else checks.forEach((c, i) => setTimeout(() => { c.dataset.o = "ok"; destello(c, "on", 380); }, i * 70));
+      destello(puerta, `marca-${ev.o}`, 700);
+    }
+
+    function paso(ahora: number) {
+      const dt = ultimo ? Math.min(ahora - ultimo, 50) : 16;
+      ultimo = ahora;
+      reloj += dt;
+      if (reloj >= proximo) { crear(eventos[indice % eventos.length]); indice++; proximo = reloj + 1500; }
+      for (let i = paquetes.length - 1; i >= 0; i--) {
+        const p = paquetes[i];
+        const k = Math.min((reloj - p.t0) / p.dur, 1);
+        if (p.fase === "in" || p.fase === "out") {
+          const len = p.path.getTotalLength();
+          const pt = p.path.getPointAtLength(suave(k) * len);
+          p.g.setAttribute("transform", `translate(${pt.x.toFixed(1)} ${pt.y.toFixed(1)})`);
+        }
+        if (k < 1) {
+          if (p.fase === "fin") p.g.style.opacity = String(1 - k);
+          continue;
+        }
+        if (p.fase === "in") {
+          anotar(p.ev);
+          p.g.style.setProperty("--c", COLOR[p.ev.o]);
+          p.g.classList.toggle("estado", p.ev.o !== "ok");
+          p.fase = "hold"; p.t0 = reloj; p.dur = p.ev.o === "blocked" ? 120 : 260;
+        } else if (p.fase === "hold") {
+          if (p.ev.o === "blocked") { p.g.classList.add("cae"); p.fase = "fin"; p.t0 = reloj; p.dur = 520; }
+          else { p.path = salidas.get(p.ev.dst)!; destello(p.path, "activa", 1300); p.fase = "out"; p.t0 = reloj; p.dur = 1150; }
+        } else if (p.fase === "out") {
+          destello(dsts.get(p.ev.dst), "activo", 700);
+          p.fase = "fin"; p.t0 = reloj; p.dur = 260;
+        } else {
+          p.g.remove(); paquetes.splice(i, 1);
+        }
+      }
+      raf = requestAnimationFrame(paso);
+    }
+
+    const arrancar = () => { if (!raf && visible && !document.hidden) { ultimo = 0; raf = requestAnimationFrame(paso); } };
+    const detener = () => { cancelAnimationFrame(raf); raf = 0; };
+    const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; visible ? arrancar() : detener(); });
+    io.observe(root);
+    const vis = () => (document.hidden ? detener() : arrancar());
+    document.addEventListener("visibilitychange", vis);
+    parar = () => { detener(); io.disconnect(); ro.disconnect(); document.removeEventListener("visibilitychange", vis); };
+  }
+
+  document.addEventListener("astro:page-load", iniciar);
+  document.addEventListener("astro:before-swap", () => { parar?.(); parar = undefined; });
+</script>
+
+<style>
+  .flujo[data-ui] { position: relative; background: var(--cardea-tinta); border-radius: 28px; color: #fff; overflow: hidden; isolation: isolate; }
+  /* Luz de petróleo detrás de la puerta: da al cristal algo que filtrar. */
+  .flujo[data-ui]::before {
+    content: ""; position: absolute; z-index: -1; left: 50%; top: 46%; width: min(640px, 80%); aspect-ratio: 1.4; translate: -50% -50%;
+    background: radial-gradient(closest-side, rgba(10, 111, 125, .55), rgba(10, 111, 125, 0)); /* taste-skill-ignore: luz de marca tras la puerta de cristal (brief) */
+  }
+  .escena { position: relative; display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.45fr) minmax(0, .9fr); gap: clamp(36px, 6vw, 88px); align-items: center; padding: clamp(32px, 4.5vw, 56px) clamp(24px, 4vw, 52px) 20px; }
+  [data-ui] .lineas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+  [data-ui] .lineas :global(.linea) { fill: none; stroke: rgba(108, 203, 211, .3); stroke-width: 1.5; transition: stroke var(--t-ui) ease; }
+  [data-ui] .lineas :global(.linea.activa) { stroke: rgba(108, 203, 211, .55); }
+  [data-ui] .lineas :global(.paquete) { transition: opacity 200ms ease; }
+  [data-ui] .lineas :global(.halo) { fill: var(--c); opacity: .22; }
+  [data-ui] .lineas :global(.punto) { fill: var(--c); transition: fill 200ms ease; }
+  [data-ui] .lineas :global(.estado .punto) { stroke: rgba(255, 255, 255, .9); stroke-width: 1.5; }
+  [data-ui] .lineas :global(.estado .halo) { opacity: .35; }
+  [data-ui] .lineas :global(.cae circle) { transform-box: fill-box; transform-origin: center; animation: cae 520ms var(--ease-out) forwards; }
+  @keyframes cae { 0% { transform: scale(1); } 30% { transform: scale(1.7); } 100% { transform: scale(.2); } }
+
+  .col { list-style: none; display: flex; flex-direction: column; gap: 14px; position: relative; z-index: 1; }
+  [data-ui] .nodo {
+    display: flex; flex-direction: column; gap: 2px; padding: 13px 16px; border-radius: 14px;
+    background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 1px rgba(207, 228, 232, .16), inset 0 1px 0 rgba(255, 255, 255, .08);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); /* taste-skill-ignore: cristal pedido en el brief */
+    transition: box-shadow var(--t-ui) ease, background-color var(--t-ui) ease;
+  }
+  [data-ui] .nodo.activo { background: rgba(108, 203, 211, .12); box-shadow: inset 0 0 0 1px rgba(108, 203, 211, .6), inset 0 1px 0 rgba(255, 255, 255, .1); }
+  [data-ui] .nodo-t { font-size: 15px; font-weight: 500; color: #fff; line-height: 1.3; }
+  [data-ui] .nodo-s { font-size: 13px; color: var(--cardea-sobre-tinta-suave); line-height: 1.35; }
+  .destino .nodo { min-height: 50px; justify-content: center; }
+
+  /* La puerta: cristal sobre las líneas; los paquetes se ven pasar desenfocados por debajo. */
+  [data-ui] .puerta {
+    position: relative; z-index: 2; border-radius: 20px; padding: 20px 20px 18px;
+    background: rgba(24, 49, 73, .52);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4); /* taste-skill-ignore: cristal pedido en el brief */
+    box-shadow: inset 0 0 0 1px rgba(108, 203, 211, .32), inset 0 1px 0 rgba(255, 255, 255, .14), 0 30px 60px -30px rgba(0, 0, 0, .55);
+    transition: box-shadow var(--t-ui) ease;
+  }
+  [data-ui] .puerta.marca-blocked { box-shadow: inset 0 0 0 1px rgba(179, 54, 43, .9), inset 0 1px 0 rgba(255, 255, 255, .14), 0 30px 60px -30px rgba(0, 0, 0, .55); }
+  [data-ui] .puerta.marca-redacted { box-shadow: inset 0 0 0 1px rgba(199, 121, 26, .85), inset 0 1px 0 rgba(255, 255, 255, .14), 0 30px 60px -30px rgba(0, 0, 0, .55); }
+  [data-ui] .puerta-cab { display: flex; align-items: center; gap: 12px; }
+  [data-ui] .puerta-t { font-size: 18px; font-weight: 600; color: #fff; letter-spacing: -0.01em; line-height: 1.2; }
+  [data-ui] .puerta-s { font-size: 13.5px; color: var(--cardea-sobre-tinta); }
+  [data-ui] .checks { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+  [data-ui] .checks li { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--cardea-sobre-tinta); padding: 5px 10px 5px 8px; border-radius: 999px; background: rgba(255, 255, 255, .06); transition: background-color 180ms ease, color 180ms ease; }
+  [data-ui] .check-p { width: 7px; height: 7px; border-radius: 50%; background: rgba(207, 228, 232, .35); transition: background-color 180ms ease, scale 180ms var(--ease-out); }
+  [data-ui] .checks li.on { background: rgba(255, 255, 255, .12); color: #fff; }
+  [data-ui] .checks li.on .check-p { scale: 1.3; background: var(--cardea-petroleo-claro); }
+  [data-ui] .checks li.on[data-o="redacted"] .check-p { background: var(--cardea-petroleo-claro); }
+  [data-ui] .checks li.on[data-o="blocked"] .check-p { background: var(--estado-bloqueada); box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .85); }
+
+  [data-ui] .registro { margin-top: 18px; padding-top: 14px; box-shadow: 0 -1px 0 rgba(207, 228, 232, .14); }
+  [data-ui] .registro-t { font-size: 12.5px; font-weight: 500; color: var(--cardea-sobre-tinta-suave); }
+  [data-ui] .registro ol { list-style: none; display: flex; flex-direction: column; gap: 2px; margin-top: 8px; min-height: 150px; }
+  [data-ui] .registro :global(.ev) { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; column-gap: 9px; align-items: baseline; padding: 7px 8px; border-radius: 10px; font-size: 13px; line-height: 1.35; }
+  [data-ui] .registro :global(.ev:first-child) { background: rgba(255, 255, 255, .05); }
+  [data-ui] .registro :global(.ev-p) { width: 8px; height: 8px; border-radius: 50%; background: #bfd3dd; align-self: center; }
+  [data-ui] .registro :global(.ev[data-o="redacted"] .ev-p) { background: var(--cardea-petroleo-claro); }
+  [data-ui] .registro :global(.ev[data-o="blocked"] .ev-p) { background: var(--estado-bloqueada); box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .8); }
+  [data-ui] .registro :global(.ev-r) { color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  [data-ui] .registro :global(.ev-d) { font-weight: 600; color: var(--cardea-sobre-tinta); font-size: 12.5px; }
+  [data-ui] .registro :global(.ev-w) { grid-column: 2 / -1; color: var(--cardea-sobre-tinta-suave); font-size: 12.5px; }
+  @media (prefers-reduced-motion: no-preference) {
+    [data-ui] .registro :global(.ev.nuevo) { animation: entra 320ms var(--ease-out); }
+  }
+  @keyframes entra { from { opacity: 0; transform: translateY(-6px); } }
+
+  figcaption { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; padding: 4px clamp(24px, 4vw, 52px) clamp(20px, 3vw, 28px); }
+  [data-ui] .leyenda { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--cardea-sobre-tinta); }
+  [data-ui] .leyenda li { display: inline-flex; align-items: center; gap: 8px; }
+  [data-ui] .leyenda li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #bfd3dd; }
+  [data-ui] .leyenda li[data-o="redacted"]::before { background: var(--cardea-petroleo-claro); }
+  [data-ui] .leyenda li[data-o="blocked"]::before { background: var(--estado-bloqueada); box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .8); }
+
+  /* Móvil: de arriba abajo. Orígenes en fila, la puerta, y los destinos en dos columnas. */
+  @media (max-width: 860px) {
+    .escena { grid-template-columns: 1fr; gap: 44px; padding: 24px 16px 16px; }
+    .origen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .destino { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    [data-ui] .nodo { padding: 10px 10px; border-radius: 12px; text-align: center; align-items: center; }
+    [data-ui] .nodo-t { font-size: 13.5px; }
+    [data-ui] .nodo-s { font-size: 12.5px; }
+    .destino .nodo { min-height: 44px; }
+    [data-ui] .puerta { padding: 16px; }
+    figcaption { padding: 4px 16px 18px; }
+    [data-ui] .registro ol { min-height: 196px; }
+    [data-ui] .registro :global(.ev-r) { white-space: normal; }
+  }
+</style>

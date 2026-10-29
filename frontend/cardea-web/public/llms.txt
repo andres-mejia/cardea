@@ -1,0 +1,39 @@
+# Cardea
+
+> Cardea is an AI usage governance product for companies, built by Tekhos (https://tekhos.com). It answers who uses which AI model, with what data, which tools agents run, and at what cost per team. The gateway and policy engine run in the customer's own infrastructure (Helm chart on Kubernetes, or the customer's AWS account); prompts never leave the customer's network and are never stored. Cardea is in a pilot phase; every figure and screenshot on the website is illustrative.
+
+Cardea es un producto de gobierno del uso de IA en empresas, de Tekhos: quién usa qué modelo, con qué datos, qué tools ejecuta y a qué coste por equipo. Se instala en la infraestructura del cliente; los prompts no salen de su red y no se almacenan. Está en fase piloto; las cifras y capturas de la web son ilustrativas.
+
+## What it covers
+
+- Applications via API: routed through Cardea's gateway, with rules, spend limits and personal-data redaction before the request reaches the provider (Anthropic, OpenAI, Amazon Bedrock).
+- Coding CLIs (Claude Code, Codex, Copilot): one key per developer, issued after corporate SSO (Entra ID, Okta); traffic goes through the same gateway.
+- Remote MCP tools: approved servers only, permissions per team and per tool, credentials held in the gateway instead of on laptops.
+- Seats and web chat: records only. Usage metrics are read from each provider's admin console; this traffic cannot be routed or controlled.
+- Cost allocation: cost centres, per-team budgets that warn and then block, chargeback export.
+- Audit evidence: a report per period that declares, control by control, what is covered, partly covered or not covered.
+
+## What it does not cover
+
+- Web chat outside corporate SSO, and control over Copilot inline completions (aggregate metrics only).
+- Local MCP servers and each CLI's built-in tools (they do not pass through any gateway).
+- Offensive agent security: prompt injection, poisoned tools, sandboxing.
+- Model hosting, an employee chat workspace, or API management.
+
+## Pages
+
+- [Home (English)](https://cardea.tekhos.com/en/): product overview, request flow, console screens, scope and deployment.
+- [Inicio (español)](https://cardea.tekhos.com/): la misma página en español.
+- [Full text for LLMs](https://cardea.tekhos.com/llms-full.txt): the complete website copy in English and Spanish.
+- [Book a demo](https://cardea.tekhos.com/en/#demo) · [Pedir una demo](https://cardea.tekhos.com/#demo)
+
+## Legal
+
+- [Privacy policy](https://cardea.tekhos.com/en/legal/privacy/) · [Política de privacidad](https://cardea.tekhos.com/legal/privacidad/)
+- [Terms and conditions](https://cardea.tekhos.com/en/legal/terms/) · [Términos y condiciones](https://cardea.tekhos.com/legal/terminos/)
+- [Legal notice](https://cardea.tekhos.com/en/legal/legal-notice/) · [Aviso legal](https://cardea.tekhos.com/legal/aviso-legal/)
+- [Cookie policy](https://cardea.tekhos.com/en/legal/cookies/) · [Política de cookies](https://cardea.tekhos.com/legal/cookies/)
+
+## Contact
+
+- cardea@tekhos.com
