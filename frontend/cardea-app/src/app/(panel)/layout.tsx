@@ -6,6 +6,7 @@ import { type ReactNode, useEffect } from "react";
 import { BarraLateral } from "@/components/BarraLateral";
 import { consumirErrorDeRetorno, reintentarGoogleUnaVez } from "@/lib/auth/sesion";
 import { useSesion } from "@/lib/auth/use-sesion";
+import { UsuarioContexto } from "@/lib/auth/usuario-contexto";
 
 export default function PanelLayout({ children }: { children: ReactNode }) {
   const sesion = useSesion();
@@ -33,9 +34,11 @@ export default function PanelLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen">
-      <BarraLateral usuario={sesion.usuario} />
-      <main className="flex min-w-0 flex-1 flex-col gap-3 p-4">{children}</main>
-    </div>
+    <UsuarioContexto.Provider value={sesion.usuario}>
+      <div className="app">
+        <BarraLateral usuario={sesion.usuario} />
+        <main className="mainw">{children}</main>
+      </div>
+    </UsuarioContexto.Provider>
   );
 }
