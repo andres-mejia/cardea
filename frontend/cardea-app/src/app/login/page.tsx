@@ -24,7 +24,7 @@ function LogoGoogle() {
 const leerErrorDeRetorno = () => mensajeDeRetorno(new URLSearchParams(window.location.search).get("error"));
 
 const CAMPO =
-  "mt-1.5 w-full rounded-[10px] border border-cardea-linea bg-white px-3.5 py-2.5 text-[14px] outline-none focus:border-cardea-petroleo focus:ring-2 focus:ring-cardea-petroleo/25";
+  "mt-1.5 h-11 w-full rounded-control border border-cardea-linea bg-white px-3.5 text-lg outline-none focus:border-cardea-petroleo focus:ring-2 focus:ring-cardea-petroleo/25 sm:text-base";
 
 export default function Login() {
   const router = useRouter();
@@ -76,65 +76,65 @@ export default function Login() {
   }
 
   return (
-    <main className="grid min-h-screen lg:grid-cols-2">
-      <section className="flex flex-col justify-between bg-cardea-tinta p-10 text-white">
-        <div className="flex items-center gap-2.5 text-[26px] font-semibold tracking-[-0.02em]">
-          <Isotipo size={34} dark />
+    <main className="grid min-h-screen grid-rows-[auto_1fr] lg:grid-cols-2 lg:grid-rows-1">
+      <section className="flex flex-col gap-6 bg-cardea-tinta px-6 py-6 text-white lg:justify-between lg:p-10">
+        <div className="flex items-center gap-2.5 text-2xl font-semibold tracking-[-0.02em]">
+          <Isotipo size={30} dark />
           Cardea
         </div>
         <div>
-          <h1 className="text-[34px] leading-tight">Gobierno del uso de IA.</h1>
-          <p className="mt-3 max-w-md text-[15px] text-[#AFC0CF]">
+          <h1 className="text-2xl lg:text-3xl">Gobierno del uso de IA.</h1>
+          <p className="mt-2 max-w-md text-lg text-cardea-nav-texto">
             Quién usa qué modelo, con qué datos, qué tools ejecuta y a qué coste. Sin guardar un solo prompt.
           </p>
         </div>
-        <p className="text-[12px] text-[#7C93A6]">{esModoEjemplo() ? "Modo de ejemplo, sin Cognito" : "Entorno dev"}</p>
+        <p className="hidden text-xs text-cardea-nav-suave lg:block">{esModoEjemplo() ? "Modo de ejemplo, sin Cognito" : "Entorno dev"}</p>
       </section>
 
-      <section className="flex items-center justify-center p-8">
-        <form onSubmit={onSubmit} className="w-full max-w-sm rounded-tarjeta bg-white p-7">
-          <h2 className="text-[22px]">{pideNueva ? "Elige tu contraseña" : "Entrar"}</h2>
-          <p className="mt-1 text-[13px] text-cardea-texto-suave">
+      <section className="flex items-start justify-center px-4 py-6 lg:items-center lg:p-8">
+        <form onSubmit={onSubmit} className="w-full max-w-sm rounded-tarjeta bg-white p-6 sm:p-7">
+          <h2 className="text-2xl">{pideNueva ? "Elige tu contraseña" : "Entrar"}</h2>
+          <p className="mt-1 text-sm text-cardea-texto-suave">
             {pideNueva ? "Es tu primera vez: sustituye la contraseña temporal que te dio tu administrador." : "Con tu cuenta de empresa."}
           </p>
           {pideNueva ? (
-            <label className="mt-6 block text-[13px] font-semibold">
+            <label className="mt-6 block text-sm font-semibold">
               Contraseña nueva
               <input type="password" required autoComplete="new-password" minLength={12} value={nueva} onChange={(e) => setNueva(e.target.value)} aria-describedby="politica" className={CAMPO} />
-              <span id="politica" className="mt-1.5 block text-[12px] font-normal text-cardea-texto-suave">Al menos 12 caracteres, con mayúsculas, minúsculas, números y símbolos.</span>
+              <span id="politica" className="mt-1.5 block text-xs font-normal text-cardea-texto-suave">Al menos 12 caracteres, con mayúsculas, minúsculas, números y símbolos.</span>
             </label>
           ) : (
           <>
-          <label className="mt-6 block text-[13px] font-semibold">
-            Email
+          <label className="mt-6 block text-sm font-semibold">
+            Correo electrónico
             <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={CAMPO} />
           </label>
-          <label className="mt-4 block text-[13px] font-semibold">
+          <label className="mt-4 block text-sm font-semibold">
             Contraseña
             <input type="password" required autoComplete="current-password" value={contrasena} onChange={(e) => setContrasena(e.target.value)} className={CAMPO} />
           </label>
           </>
           )}
           {aviso && (
-            <p role="alert" className="mt-3 rounded-[10px] bg-estado-bloqueada/10 p-3 text-[13px] text-estado-bloqueada">
+            <p role="alert" className="mt-4 rounded-control bg-estado-bloqueada-fondo p-3 text-sm text-estado-bloqueada-texto">
               {aviso}
             </p>
           )}
-          <button type="submit" disabled={ocupado} className="mt-6 w-full rounded-full bg-cardea-tinta py-2.5 text-[14px] text-white hover:bg-cardea-tinta-2 disabled:opacity-60">
+          <button type="submit" disabled={ocupado} className="mt-6 h-11 w-full rounded-control bg-cardea-petroleo text-base font-medium text-white hover:bg-cardea-petroleo-oscuro disabled:opacity-60">
             {ocupado ? "Entrando…" : pideNueva ? "Guardar y entrar" : "Entrar"}
           </button>
           {conGoogle && !pideNueva && (
             <>
-              <div className="my-4 flex items-center gap-3 text-[12px] text-cardea-texto-suave" aria-hidden="true">
+              <div className="my-4 flex items-center gap-3 text-xs text-cardea-texto-suave" aria-hidden="true">
                 <span className="h-px flex-1 bg-cardea-linea" />o<span className="h-px flex-1 bg-cardea-linea" />
               </div>
-              <button type="button" disabled={ocupado} onClick={onGoogle} className="flex w-full items-center justify-center gap-2.5 rounded-full border border-cardea-linea py-2.5 text-[14px] text-cardea-tinta hover:bg-cardea-niebla disabled:opacity-60">
+              <button type="button" disabled={ocupado} onClick={onGoogle} className="flex h-11 w-full items-center justify-center gap-2.5 rounded-control border border-cardea-linea text-base font-medium text-cardea-tinta hover:bg-cardea-niebla disabled:opacity-60">
                 <LogoGoogle />
                 Continuar con Google
               </button>
             </>
           )}
-          {esModoEjemplo() && <p className="mt-3 text-center text-[12px] text-cardea-texto-suave">En modo de ejemplo cualquier credencial entra.</p>}
+          {esModoEjemplo() && <p className="mt-3 text-center text-xs text-cardea-texto-suave">En modo de ejemplo cualquier credencial entra.</p>}
         </form>
       </section>
     </main>

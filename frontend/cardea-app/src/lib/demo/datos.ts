@@ -193,7 +193,7 @@ export function conexiones() {
       { letra: "Az", clase: "m", nombre: "Azure OpenAI", detalle: "Sin credenciales", estado: "Sin configurar", tono: "mute" },
       { letra: "G", clase: "t", nombre: "Métricas de GitHub Copilot", detalle: "Sincroniza cada hora", estado: "Conectado", tono: "ok" },
       { letra: "C", clase: "t", nombre: "Telemetría de Claude Code", detalle: "OpenTelemetry", estado: "Conectado", tono: "ok" },
-      { letra: "F", clase: "b", nombre: "Facturación cloud", detalle: "La credencial caducó ayer", estado: "Reconectar", tono: "bad" },
+      { letra: "F", clase: "b", nombre: "Facturación cloud", detalle: "La credencial caducó ayer", estado: "Error", tono: "bad" },
       { letra: "E", clase: "t", nombre: "Microsoft Entra ID", detalle: "OIDC, 214 usuarios y 5 grupos", estado: "Conectado", tono: "ok" },
     ],
   };

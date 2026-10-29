@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Cabecera, Cargando } from "@/components/Cabecera";
-import { filaPulsable, Icono, miles, type NombreIcono, Segmentos } from "@/components/graficos";
+import { Icono, miles, type NombreIcono, Segmentos } from "@/components/graficos";
 import type { DatosDe } from "@/lib/demo/datos";
 import { redactar } from "@/lib/demo/redaccion";
 import { usePantalla } from "@/lib/demo/use-pantalla";
@@ -14,12 +14,17 @@ type Regla = DatosDe<"politicas">["reglas"][number];
 
 const EJEMPLO = "Resume la reclamación de Lucía Romero Gil con DNI 12345678Z y cuenta ES91 2100 0418 4502 0005 1332.";
 
+/** En pantallas estrechas el detalle queda debajo: al elegir, se lleva la vista hasta él. */
+function irAlDetalle(el: HTMLElement | null) {
+  if (el && window.matchMedia("(max-width: 1023px)").matches) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function Flujo({ regla, detecta }: { regla: Regla; detecta: string[] }) {
   const si: Record<string, React.ReactNode> = {
     Datos: (
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 3 }}>
-        {detecta.map((x) => <span key={x} className="chip line" style={{ padding: "2px 8px", fontSize: 9.3 }}>{x}</span>)}
-      </div>
+      <span className="mt-1.5 flex flex-wrap gap-1.5">
+        {detecta.map((x) => <span key={x} className="chip mute">{x}</span>)}
+      </span>
     ),
     Modelos: <>El modelo pedido no está en la lista de {regla.ambitos[0]}</>,
     Tools: <>La tool MCP no está permitida para el equipo de quien la llama</>,
@@ -32,16 +37,26 @@ function Flujo({ regla, detecta }: { regla: Regla; detecta: string[] }) {
     Avisar: "Dejar pasar y avisar a quien la envía",
     Bloquear: "Rechazar la petición",
   };
+  const pasos: [string, NombreIcono, React.ReactNode, boolean?][] = [
+    ["Cuando llega", "send", regla.ambitos[0] === "Todos los equipos" ? "Una petición de cualquier aplicación o CLI" : `Una petición de ${regla.ambitos.join(", ")}`],
+    ["Si contiene", "search", si[regla.categoria]],
+    ["Entonces", regla.icono as NombreIcono, entonces[regla.accion] ?? regla.accion, true],
+    ["Y registra", "file", "Un evento de auditoría, sin guardar el texto original"],
+  ];
   return (
-    <>
-      <div className="node"><div className="ic t"><Icono n="send" size={13} /></div><div><small>Cuando llega</small>{regla.ambitos[0] === "Todos los equipos" ? "Una petición de cualquier aplicación o CLI" : `Una petición de ${regla.ambitos.join(", ")}`}</div></div>
-      <div className="enlace" />
-      <div className="node"><div className="ic t"><Icono n="search" size={13} /></div><div><small>Si contiene</small>{si[regla.categoria]}</div></div>
-      <div className="enlace" />
-      <div className="node"><div className="ic k"><Icono n={regla.icono as NombreIcono} size={13} /></div><div><small>Entonces</small>{entonces[regla.accion] ?? regla.accion}</div></div>
-      <div className="enlace" />
-      <div className="node"><div className="ic m"><Icono n="file" size={13} /></div><div><small>Y registrar</small>Un evento de auditoría, sin guardar el original</div></div>
-    </>
+    <ol className="space-y-2">
+      {pasos.map(([titulo, icono, cuerpo, clave]) => (
+        <li key={titulo} className="bloque flex items-start gap-3">
+          <span className={`mt-0.5 flex size-8 flex-none items-center justify-center rounded-full ${clave ? "bg-cardea-tinta text-white" : "bg-white text-cardea-texto-suave"}`}>
+            <Icono n={icono} size={16} />
+          </span>
+          <div className="min-w-0">
+            <p className="etiqueta">{titulo}</p>
+            <div className={clave ? "font-medium" : ""}>{cuerpo}</div>
+          </div>
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -53,6 +68,7 @@ export default function Politicas() {
   const [editando, setEditando] = useState(false);
   const [texto, setTexto] = useState(EJEMPLO);
   const [guardado, setGuardado] = useState(false);
+  const detalle = useRef<HTMLElement>(null);
   useEffect(() => {
     if (d) setReglas(d.reglas);
   }, [d]);
@@ -69,78 +85,97 @@ export default function Politicas() {
     setReglas((rs) => rs.map((r) => (r.id === id ? { ...r, activa: !r.activa, estado: !r.activa ? (r.estado === "Borrador" ? "En pruebas" : r.estado) : r.estado } : r)));
   }
 
+  function elegir(id: string) {
+    setSel(id);
+    setGuardado(false);
+    irAlDetalle(detalle.current);
+  }
+
+  function crear() {
+    const id = `nueva-${reglas.length + 1}`;
+    const nueva: Regla = { id, icono: "shield", clase: "m", nombre: "Regla nueva", categoria: "Datos", ambitos: ["Todos los equipos"], accion: "Redactar", aciertos: 0, activa: false, estado: "Borrador", tono: "mute" };
+    setReglas((rs) => [nueva, ...rs]);
+    setFiltro("Todas");
+    elegir(id);
+  }
+
   return (
     <>
       {cabecera}
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <Segmentos opciones={FILTROS} valor={filtro} onChange={setFiltro} />
-        <button type="button" className="pillbtn" style={{ marginLeft: "auto" }}><Icono n="plus" size={11} sw={2.2} />Crear regla</button>
+      <div className="barra-herr">
+        <Segmentos etiqueta="Filtrar reglas" opciones={FILTROS} valor={filtro} onChange={setFiltro} />
+        <button type="button" className="boton sm:ml-auto" onClick={crear}><Icono n="plus" size={16} sw={2.2} />Crear regla</button>
       </div>
-      <div className="r2" style={{ flex: 1 }}>
-        <div className="c2" style={{ flex: 1.25 }}>
-          <h4>Reglas<span>{reglas.length} reglas, {activas} activas</span></h4>
-          {visibles.map((r) => {
-            const elegida = r.id === regla.id;
-            return (
-              <div
-                key={r.id}
-                {...filaPulsable(elegida, () => setSel(r.id))}
-                className="fila"
-                style={{ background: elegida ? "#F1F8F9" : "#F4F7F9", boxShadow: elegida ? "inset 0 0 0 1.5px #0A6F7D" : undefined, borderRadius: 14, padding: "9px 12px", display: "flex", alignItems: "center", gap: 10, marginBottom: 7 }}
-              >
-                <div className={`ic ${r.clase}`}><Icono n={r.icono as NombreIcono} size={14} /></div>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontSize: 11.2, fontWeight: 600 }}>{r.nombre}</div>
-                  <div style={{ display: "flex", gap: 4, marginTop: 4, alignItems: "center", flexWrap: "wrap" }}>
-                    {r.ambitos.map((a) => <span key={a} className="chip mute" style={{ padding: "1.5px 7px", fontSize: 9 }}>{a}</span>)}
-                    <span className="chip line" style={{ padding: "1.5px 7px", fontSize: 9 }}>{r.accion}</span>
-                  </div>
-                </div>
-                <div style={{ textAlign: "right", flex: "none" }}>
-                  <div className="num" style={{ fontSize: 12.5 }}>{miles(r.aciertos)}</div>
-                  <div style={{ fontSize: 8.6, color: "#5F7183" }}>este mes</div>
-                </div>
-                <span className={`chip ${r.activa ? r.tono : "mute"}`}>{r.activa ? r.estado : r.estado === "Borrador" ? "Borrador" : "Pausada"}</span>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={r.activa}
-                  aria-label={`Activar ${r.nombre}`}
-                  className={`tog ${r.activa ? "on" : ""}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    alternar(r.id);
-                  }}
-                  onKeyDown={(e) => e.stopPropagation()}
-                />
-              </div>
-            );
-          })}
-        </div>
-        <div className="c2" style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-          <h4>Cómo actúa la regla<span>{regla.nombre}</span></h4>
+
+      <div className="grid items-start gap-4 lg:grid-cols-[5fr_4fr]">
+        <section className="tarjeta" aria-labelledby="reglas">
+          <div className="tarjeta-titulo">
+            <h2 id="reglas">Reglas</h2>
+            <span className="meta">{reglas.length} reglas, {activas} activas</span>
+          </div>
+          <ul className="-mx-3 space-y-1">
+            {visibles.map((r) => {
+              const elegida = r.id === regla.id;
+              const estado = r.activa ? r.estado : r.estado === "Borrador" ? "Borrador" : "Pausada";
+              return (
+                <li key={r.id} data-elegida={elegida} onClick={() => elegir(r.id)} className="seleccionable grid grid-cols-[1fr_auto_auto] items-center gap-x-4 gap-y-2 px-3 py-3 sm:grid-cols-[1fr_auto_auto_auto]">
+                  <button type="button" aria-pressed={elegida} className="col-span-3 min-w-0 rounded-control text-left sm:col-span-1" onClick={(e) => { e.stopPropagation(); elegir(r.id); }}>
+                    <span className="block font-medium">{r.nombre}</span>
+                    <span className="meta block">{r.ambitos.join(" · ")} · <span className="text-cardea-texto">{r.accion}</span></span>
+                  </button>
+                  <p className="meta text-left sm:text-right"><span className="num text-cardea-tinta">{miles(r.aciertos)}</span> este mes</p>
+                  <span className={`chip justify-self-end ${r.activa ? r.tono : "mute"}`}>{estado}</span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={r.activa}
+                    aria-label={`Regla activa: ${r.nombre}`}
+                    className="interruptor ml-1 justify-self-end"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alternar(r.id);
+                    }}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+
+        <section ref={detalle} className="tarjeta flex scroll-mt-20 flex-col gap-4" aria-labelledby="actua">
+          <div>
+            <h2 id="actua" className="text-lg font-semibold">Cómo actúa la regla</h2>
+            <p className="meta">{regla.nombre}</p>
+          </div>
           <Flujo regla={regla} detecta={d.detecta} />
           {regla.categoria === "Datos" && (
-            <div className="quote" style={{ marginTop: 10 }}>
-              <div style={{ fontSize: 9.3, color: "#5F7183", marginBottom: 3 }}>
-                Prueba con un ejemplo{prueba.cuenta > 0 ? `: ${prueba.cuenta} datos sustituidos` : ""}
+            <div className="rounded-bloque border border-cardea-linea-suave p-3.5">
+              <div className="flex items-center justify-between gap-3">
+                <p className="etiqueta" aria-live="polite">
+                  Prueba con un ejemplo{prueba.cuenta > 0 ? `: ${prueba.cuenta} datos sustituidos` : ": ningún dato detectado"}
+                </p>
+                <button type="button" className="boton sec peq" aria-expanded={editando} onClick={() => setEditando((v) => !v)}>
+                  {editando ? "Ocultar texto" : "Probar otro texto"}
+                </button>
               </div>
-              {editando ? (
-                <textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={3} className="w-full resize-none rounded-lg bg-white p-2 outline-none ring-1 ring-cardea-linea focus:ring-cardea-petroleo" />
-              ) : null}
-              <div style={{ marginTop: editando ? 6 : 0 }}>
+              {editando && (
+                <label className="mt-3 block">
+                  <span className="sr-only">Texto de prueba</span>
+                  <textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={3} className="w-full resize-y rounded-control border border-cardea-linea bg-white p-2.5 outline-none focus:border-cardea-petroleo" />
+                </label>
+              )}
+              <p className="mt-2 leading-6">
                 {prueba.trozos.map((t, i) => (t.marcador ? <span key={i} className="redact">{t.marcador}</span> : <span key={i}>{t.texto}</span>))}
-              </div>
+              </p>
             </div>
           )}
-          <div style={{ display: "flex", gap: 7, marginTop: "auto", paddingTop: 10, alignItems: "center" }}>
-            <button type="button" className="pillbtn" onClick={() => setGuardado(true)}>Guardar cambios</button>
-            {regla.categoria === "Datos" && (
-              <button type="button" className="pillbtn ghost" onClick={() => setEditando((v) => !v)}>{editando ? "Ver resultado" : "Probar otro texto"}</button>
-            )}
-            {guardado && <span className="chip ok">Guardado (demo)</span>}
+          <div className="flex flex-wrap items-center gap-3">
+            <button type="button" className="boton" onClick={() => setGuardado(true)}>Guardar cambios</button>
+            <span role="status" className="meta flex items-center gap-1.5">
+              {guardado && <><Icono n="check" size={14} />Guardado. En la demo no sale del navegador.</>}
+            </span>
           </div>
-        </div>
+        </section>
       </div>
     </>
   );

@@ -3,12 +3,15 @@
 import Link from "next/link";
 
 import { Cabecera, Cargando } from "@/components/Cabecera";
-import { Area, BAD, Donut, eur, Icono, INK, type NombreIcono, TEAL, TEAL_L, WARN } from "@/components/graficos";
+import { Area, eur, Icono, type NombreIcono, PETROLEO, SERIE } from "@/components/graficos";
 import { useUsuario } from "@/lib/auth/usuario-contexto";
 import { usePantalla } from "@/lib/demo/use-pantalla";
 
-const COLORES_CANAL = [INK, TEAL, "#8CCDD4"];
-const COLOR_KPI: Record<string, string> = { teal: TEAL, ink: INK, bad: BAD };
+/** Solo lo que pide actuar lleva color de estado; lo informativo va en neutro. */
+const COLOR_ATENCION: Record<string, string> = {
+  w: "text-estado-aviso-texto",
+  b: "text-estado-bloqueada-texto",
+};
 
 function saludo(hoy: Date): string {
   const h = hoy.getHours();
@@ -25,94 +28,106 @@ export default function PanelGeneral() {
   if (!d) return <>{cabecera}<Cargando /></>;
 
   const pctPresupuesto = Math.round((d.gasto / d.presupuesto) * 100);
+  const totalCanales = d.canales.reduce((s, c) => s + c.valor, 0);
   return (
     <>
       {cabecera}
-      <div className="r2">
-        <div className="c2 dark" style={{ flex: 1.65, display: "flex", flexDirection: "column", paddingBottom: 0, overflow: "hidden" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div>
-              <div style={{ fontSize: 10.5, color: "#9FB4C4" }}>Gasto de {d.mes}</div>
-              <div className="num" style={{ fontSize: 36, lineHeight: 1.1, marginTop: 3 }}>{eur(d.gasto)}</div>
-            </div>
-            <div style={{ textAlign: "right" }}>
-              <span className="chip glass">+{d.variacion} % frente a {d.mesAnterior}</span>
-              <div style={{ fontSize: 9.8, color: "#9FB4C4", marginTop: 8 }}>{pctPresupuesto} % del presupuesto de {eur(d.presupuesto)}</div>
-              <div style={{ width: 150, height: 5, borderRadius: 3, background: "#2A4259", margin: "5px 0 0 auto" }}>
-                <div style={{ width: `${pctPresupuesto}%`, height: "100%", borderRadius: 3, background: TEAL_L }} />
-              </div>
-            </div>
+
+      <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
+        <section className="tarjeta" aria-labelledby="atencion">
+          <div className="tarjeta-titulo">
+            <h2 id="atencion">Requiere atención</h2>
+            <span className="meta">{d.atencion.length} pendientes</span>
           </div>
-          <div style={{ margin: "10px -16px 0" }}>
-            <Area vals={d.diario} w={480} h={84} line={TEAL_L} fill="rgba(108,203,211,.16)" />
-          </div>
-        </div>
-        <div className="c2" style={{ flex: 1 }}>
-          <h4>Gasto por canal</h4>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <Donut segs={d.canales.map((c, i): [number, string] => [c.valor, COLORES_CANAL[i] ?? INK])} size={104} thick={15}>
-              <div className="num" style={{ fontSize: 15 }}>{d.canales.length}</div>
-              <div style={{ fontSize: 8.5, color: "#5F7183" }}>canales</div>
-            </Donut>
-            <div style={{ flex: 1 }}>
-              {d.canales.map((c, i) => (
-                <div key={c.nombre} className="lg">
-                  <i style={{ background: COLORES_CANAL[i] }} />
-                  {c.nombre}
-                  <b>{eur(c.valor)}</b>
+          <ul className="lista">
+            {d.atencion.map((a) => (
+              <li key={a.titulo} className="flex items-center gap-3 py-3">
+                <span className={COLOR_ATENCION[a.clase] ?? "text-cardea-texto-suave"}>
+                  <Icono n={a.icono as NombreIcono} size={18} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">{a.titulo}</p>
+                  <p className="meta">{a.detalle}</p>
                 </div>
-              ))}
+                <Link href={a.href} className="boton sec peq">{a.accion}</Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="tarjeta flex flex-col" aria-labelledby="gasto">
+          <h2 id="gasto" className="meta">Gasto de {d.mes}</h2>
+          <p className="num mt-1 text-3xl">{eur(d.gasto)}</p>
+          <p className="meta mt-1">+{d.variacion} % frente a {d.mesAnterior}</p>
+          <div className="mt-4">
+            <div className="flex justify-between text-sm">
+              <span>Presupuesto del mes</span>
+              <span className="num">{pctPresupuesto} % de {eur(d.presupuesto)}</span>
             </div>
+            <div className="pista mt-2"><i style={{ width: `${pctPresupuesto}%` }} /></div>
           </div>
-        </div>
+          <div className="mt-auto pt-5">
+            <p className="etiqueta mb-2">Gasto diario</p>
+            <Area vals={d.diario} w={400} h={72} line={PETROLEO} fill="color-mix(in srgb, var(--color-cardea-petroleo) 10%, transparent)" sw={1.8} pad={2} />
+            <div className="etiqueta mt-1 flex justify-between"><span>1 {d.mes.slice(0, 3)}</span><span>Hoy</span></div>
+          </div>
+        </section>
       </div>
 
-      <div className="r2">
+      <section className="tarjeta grid gap-5 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-cardea-linea-suave" aria-label="Uso del mes">
         {d.kpis.map((k) => (
-          <div key={k.etiqueta} className="c2" style={{ flex: 1, display: "flex", alignItems: "center", gap: 10, padding: "11px 14px" }}>
-            <div className={`ic ${k.clase}`}><Icono n={k.icono as NombreIcono} size={15} /></div>
-            <div>
-              <div style={{ fontSize: 9.8, color: "#5F7183" }}>{k.etiqueta}</div>
-              <div className="num" style={{ fontSize: 19, lineHeight: 1.15 }}>{k.valor}</div>
-            </div>
-            <div style={{ marginLeft: "auto", width: 74, textAlign: "right" }}>
-              <span className={`chip ${k.tono}`} style={{ padding: "1.5px 7px" }}>{k.delta}</span>
-              <div style={{ marginTop: 5 }}>
-                <Area vals={k.serie} w={74} h={22} line={COLOR_KPI[k.color] ?? TEAL} fill="transparent" sw={1.6} pad={2} />
-              </div>
-            </div>
+          <div key={k.etiqueta} className="sm:px-6 sm:first:pl-0 sm:last:pr-0">
+            <p className="meta">{k.etiqueta}</p>
+            <p className="num mt-1 text-2xl">{k.valor}</p>
+            <p className="etiqueta mt-1">{k.etiqueta === "Bloqueadas" ? `${k.delta} de las peticiones` : `${k.delta} frente a ${d.mesAnterior}`}</p>
           </div>
         ))}
-      </div>
+      </section>
 
-      <div className="r2" style={{ flex: 1 }}>
-        <div className="c2" style={{ flex: 1.45 }}>
-          <h4>Requiere atención<span>{d.atencion.length} pendientes</span></h4>
-          {d.atencion.map((a) => (
-            <div key={a.titulo} className="li">
-              <div className={`ic ${a.clase}`}><Icono n={a.icono as NombreIcono} size={14} /></div>
-              <div className="tx"><b>{a.titulo}</b><span>{a.detalle}</span></div>
-              <Link href={a.href} className="chip line hover:text-cardea-petroleo">{a.accion}</Link>
-            </div>
-          ))}
-        </div>
-        <div className="c2" style={{ flex: 1 }}>
-          <h4>Presupuesto por equipo</h4>
-          {d.equipos.map((e) => {
-            const pct = Math.round((e.gastado / e.presupuesto) * 100);
-            return (
-              <div key={e.nombre} style={{ marginBottom: 9 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10.3 }}>
-                  <span>{e.nombre}</span>
-                  <span className="num">{pct} %</span>
-                </div>
-                <div style={{ height: 7, borderRadius: 4, background: "#E6ECF1", marginTop: 4 }}>
-                  <div style={{ height: "100%", width: `${pct}%`, borderRadius: 4, background: pct >= 90 ? WARN : TEAL }} />
-                </div>
-              </div>
-            );
-          })}
-        </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <section className="tarjeta" aria-labelledby="canal">
+          <div className="tarjeta-titulo"><h2 id="canal">Gasto por canal</h2></div>
+          <div className="flex h-3 gap-0.5 overflow-hidden rounded-full" aria-hidden="true">
+            {d.canales.map((c, i) => (
+              <span key={c.nombre} style={{ width: `${(c.valor / totalCanales) * 100}%`, background: SERIE[i] }} />
+            ))}
+          </div>
+          <ul className="lista mt-3">
+            {d.canales.map((c, i) => (
+              <li key={c.nombre} className="flex items-center gap-2.5 py-2.5">
+                <span className="muestra" style={{ background: SERIE[i] }} />
+                <span className="flex-1">{c.nombre}</span>
+                <span className="meta num font-normal">{Math.round((c.valor / totalCanales) * 100)} %</span>
+                <span className="num w-20 text-right">{eur(c.valor)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="tarjeta" aria-labelledby="equipos">
+          <div className="tarjeta-titulo">
+            <h2 id="equipos">Presupuesto por equipo</h2>
+            <span className="meta">Consumido este mes</span>
+          </div>
+          <ul className="space-y-3">
+            {d.equipos.map((e) => {
+              const pct = Math.round((e.gastado / e.presupuesto) * 100);
+              const cerca = pct >= 90;
+              return (
+                <li key={e.nombre}>
+                  <div className="flex justify-between gap-3">
+                    <span>{e.nombre}</span>
+                    <span className={`num ${cerca ? "text-estado-aviso-texto" : ""}`}>
+                      {cerca && <span className="mr-2 text-xs font-medium">Cerca del límite</span>}
+                      {pct} %
+                    </span>
+                  </div>
+                  <div className="pista mt-1.5"><i className={cerca ? "warn" : ""} style={{ width: `${pct}%` }} /></div>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       </div>
     </>
   );
