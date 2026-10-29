@@ -11,7 +11,7 @@ terraform {
 locals {
   table_name    = "cardea-contact-${var.environment}"
   function_name = "cardea-${var.environment}-contact"
-  cors_origins  = ["https://${var.domain_name}", "https://www.${var.domain_name}"]
+  mail_domain   = split("@", var.ses_from_address)[1]
 }
 
 resource "aws_dynamodb_table" "contact" {
@@ -55,17 +55,20 @@ resource "aws_iam_role_policy" "contact" {
       {
         Effect    = "Allow"
         Action    = ["ses:SendEmail"]
-        Resource  = "*"
+        Resource  = ["arn:aws:ses:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:identity/${local.mail_domain}", "arn:aws:ses:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:configuration-set/${var.configuration_set_name}"]
         Condition = { StringEquals = { "ses:FromAddress" = var.ses_from_address } }
       },
       {
         Effect   = "Allow"
-        Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
-        Resource = "*"
+        Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+        Resource = "${aws_cloudwatch_log_group.contact.arn}:*"
       },
     ]
   })
 }
+
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
 data "archive_file" "contact" {
   type        = "zip"
@@ -90,9 +93,10 @@ resource "aws_lambda_function" "contact" {
 
   environment {
     variables = {
-      TABLE_NAME     = aws_dynamodb_table.contact.name
-      FROM_ADDRESS   = var.ses_from_address
-      NOTIFY_ADDRESS = var.notify_address
+      TABLE_NAME        = aws_dynamodb_table.contact.name
+      FROM_ADDRESS      = var.ses_from_address
+      NOTIFY_ADDRESS    = var.notify_address
+      CONFIGURATION_SET = var.configuration_set_name
     }
   }
 
@@ -103,7 +107,7 @@ resource "aws_apigatewayv2_api" "contact" {
   name          = "${local.function_name}-api"
   protocol_type = "HTTP"
   cors_configuration {
-    allow_origins = local.cors_origins
+    allow_origins = var.allowed_origins
     allow_methods = ["POST", "OPTIONS"]
     allow_headers = ["content-type"]
     max_age       = 3600

@@ -23,6 +23,10 @@ variable "github_access_token" {
   default   = ""
   sensitive = true
 }
+variable "pnpm_version" {
+  type        = string
+  description = "Versión de pnpm del campo packageManager de package.json."
+}
 variable "environment_variables" {
   type    = map(string)
   default = {}
@@ -57,7 +61,7 @@ resource "aws_amplify_app" "this" {
             preBuild:
               commands:
                 - corepack enable
-                - corepack prepare pnpm@10.4.0 --activate
+                - corepack prepare pnpm@${var.pnpm_version} --activate
                 - pnpm install --frozen-lockfile
             build:
               commands:
@@ -105,4 +109,5 @@ resource "aws_amplify_domain_association" "this" {
 }
 
 output "app_id" { value = aws_amplify_app.this.id }
+output "app_arn" { value = aws_amplify_app.this.arn }
 output "default_domain" { value = aws_amplify_app.this.default_domain }
