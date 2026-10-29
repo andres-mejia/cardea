@@ -199,6 +199,12 @@ resource "aws_iam_role_policy" "plan_state" {
     Version = "2012-10-17"
     Statement = [
       { Sid = "LeerEstado", Effect = "Allow", Action = ["s3:GetObject", "s3:ListBucket"], Resource = [local.state_arn, "${local.state_arn}/*"] },
+      {
+        Sid      = "LeerSecretosDeTerraform"
+        Effect   = "Allow"
+        Action   = ["secretsmanager:GetSecretValue"]
+        Resource = length(var.plan_readable_secrets) > 0 ? [for s in var.plan_readable_secrets : "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${s}-*"] : ["arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:ninguno"]
+      },
       { Sid = "Bloqueo", Effect = "Allow", Action = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem"], Resource = local.lock_arn },
       {
         # ReadOnlyAccess abre los planos de datos (objetos, ítems, secretos, mensajes,
