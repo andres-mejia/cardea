@@ -16,7 +16,9 @@ import Marca from "./Marca.astro";
 <style>
   .pie { border-top: 1px solid var(--cardea-linea); padding: 40px 0 28px; }
   .row { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
-  .row p { font-size: 14px; margin-top: 10px; }
-  nav { display: flex; gap: 20px; font-size: 14px; color: var(--cardea-texto); }
+  .row p { font-size: 14px; margin-top: 12px; }
+  nav { display: flex; flex-wrap: wrap; gap: 0 8px; margin-inline: -10px; font-size: 14.5px; color: var(--cardea-texto); }
+  nav a { padding: 10px; white-space: nowrap; border-radius: 8px; }
+  nav a:hover { color: var(--cardea-tinta); text-decoration: underline; text-underline-offset: 3px; }
   .copy { font-size: 12.5px; color: var(--cardea-texto-suave); margin-top: 28px; }
 </style>

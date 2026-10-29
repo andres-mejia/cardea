@@ -20,9 +20,11 @@ const appUrl = import.meta.env.PUBLIC_APP_URL ?? "https://cardea-app.tekhos.com"
 <style>
   .hdr { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,.86); backdrop-filter: blur(10px); border-bottom: 1px solid var(--cardea-linea); }
   .row { display: flex; align-items: center; gap: 28px; height: 68px; }
-  nav { display: flex; gap: 22px; font-size: 14.5px; color: var(--cardea-texto); margin-left: 12px; }
-  nav a:hover { color: var(--cardea-tinta); }
+  nav { display: flex; gap: 6px; font-size: 15px; color: var(--cardea-texto); margin-left: 8px; }
+  nav a { padding: 10px 10px; border-radius: 8px; }
+  nav a:hover { color: var(--cardea-tinta); background: var(--cardea-niebla); }
   .acciones { margin-left: auto; display: flex; gap: 8px; }
-  .acciones .btn { padding: 10px 18px; font-size: 14px; }
-  @media (max-width: 820px) { nav { display: none; } .row { gap: 12px; } .acciones { gap: 4px; } .acciones .btn-ghost { border-color: transparent; padding: 10px 10px; } .acciones .btn-primary { padding: 10px 14px; } }
+  .acciones .btn { min-height: 44px; padding: 10px 18px; font-size: 14.5px; }
+  @media (max-width: 860px) { nav { display: none; } .row { gap: 12px; } .acciones .btn { padding: 10px 14px; } }
+  @media (max-width: 360px) { .acciones .btn-ghost { box-shadow: none; padding: 10px 8px; } }
 </style>
