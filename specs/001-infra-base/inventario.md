@@ -173,3 +173,11 @@ ACTIVE
 | `secret:rds!cluster-…` | secreto de la contraseña maestra, gestionado por RDS (`manage_master_user_password`) |
 
 Ningún recurso de Cardea creado fuera de Terraform salvo lo declarado. La política de arranque (`arranque-ci-caduca-2027-01-31`) se adjuntó por CLI.
+
+## Después del apply
+
+- `https://cardea.tekhos.com` → 200 (SC-002); asociación de la landing `AVAILABLE`.
+- Aurora en pausa: `ServerlessDatabaseCapacity` 6.5 a las 01:18 y 0.0 desde las 01:23 (escenario 1 de US3).
+- Panel: al recrear la app, el CNAME `cardea-app.tekhos.com` quedó apuntando a la distribución anterior (`d3rj86kt223pwd`) y la asociación falló. Se borró ese registro (solo ese, de Cardea) y se recreó la asociación; ahora `cardea-app CNAME d3sdmfzrx3b4gv.cloudfront.net`, `AWAITING_APP_CNAME` mientras propaga.
+- El panel (WEB_COMPUTE) no admite despliegue manual: necesita la conexión con GitHub autorizando la GitHub App de Amplify en el navegador (T048, pendiente de Andrés).
+- `terraform plan -detailed-exitcode` → exit 0.
