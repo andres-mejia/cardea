@@ -27,6 +27,10 @@ variable "pnpm_version" {
   type        = string
   description = "Versión de pnpm del campo packageManager de package.json."
 }
+variable "node_version" {
+  type        = string
+  description = "Versión de Node del .nvmrc; la imagen de Amplify trae otra por defecto."
+}
 variable "environment_variables" {
   type    = map(string)
   default = {}
@@ -60,6 +64,7 @@ resource "aws_amplify_app" "this" {
           phases:
             preBuild:
               commands:
+                - nvm install ${var.node_version} && nvm use ${var.node_version}
                 - corepack enable
                 - corepack prepare pnpm@${var.pnpm_version} --activate
                 - cd ../.. && pnpm install --frozen-lockfile && cd ${var.app_root}

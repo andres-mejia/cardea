@@ -44,6 +44,12 @@ variable "github_access_token" {
   description = "PAT con repo y admin:repo_hook. Vacío: la conexión se cablea tras el primer apply (infra/README.md)."
 }
 
+variable "node_version" {
+  type        = string
+  description = "Versión de Node del .nvmrc, la misma que usa Jano."
+  default     = "22.23.4"
+}
+
 variable "pnpm_version" {
   type        = string
   default     = "10.4.0"

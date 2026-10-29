@@ -7,7 +7,7 @@
 #   ci.tf        roles OIDC de GitHub Actions
 
 terraform {
-  required_version = ">= 1.6"
+  required_version = ">= 1.9"
   required_providers {
     aws     = { source = "hashicorp/aws", version = "~> 6.1" }
     archive = { source = "hashicorp/archive", version = "~> 2.0" }
@@ -35,6 +35,7 @@ module "landing" {
   github_repository   = var.github_repository
   github_access_token = var.github_access_token
   pnpm_version        = var.pnpm_version
+  node_version        = var.node_version
   environment_variables = {
     PUBLIC_WAITLIST_ENDPOINT = module.contact.endpoint_url
     PUBLIC_APP_URL           = local.panel_url
@@ -53,6 +54,7 @@ module "panel" {
   github_repository   = var.github_repository
   github_access_token = var.github_access_token
   pnpm_version        = var.pnpm_version
+  node_version        = var.node_version
   environment_variables = {
     NEXT_PUBLIC_COGNITO_DOMAIN       = module.cognito.hosted_ui_domain
     NEXT_PUBLIC_COGNITO_CLIENT_ID    = module.cognito.app_client_id
