@@ -30,3 +30,6 @@ docs/pitch/__pycache__/
 *.log
 tfplan
 tfplan.json
+
+# Ajustes locales de Claude Code
+.claude/settings.local.json

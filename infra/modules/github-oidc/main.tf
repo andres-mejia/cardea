@@ -21,6 +21,12 @@ variable "github_repo" {
   description = "owner/repo."
 }
 
+variable "github_repo_immutable" {
+  type        = string
+  default     = ""
+  description = "owner@id/repo@id: forma del repo en el `sub` cuando el repo usa immutable subject (gh api repos/<owner>/<repo>/actions/oidc/customization/sub)."
+}
+
 variable "deploy_workflows" {
   type        = list(string)
   default     = ["infra-apply.yml", "landing-deploy.yml"]
@@ -44,16 +50,19 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 locals {
-  prefix          = "cardea-${var.environment}"
-  account_id      = data.aws_caller_identity.current.account_id
-  region          = data.aws_region.current.region
-  oidc_aud        = "token.actions.githubusercontent.com:aud"
-  oidc_sub        = "token.actions.githubusercontent.com:sub"
-  oidc_wf         = "token.actions.githubusercontent.com:job_workflow_ref"
-  sub_main        = "repo:${var.github_repo}:ref:refs/heads/main"
-  sub_pr          = "repo:${var.github_repo}:pull_request"
-  deploy_wf_refs  = [for f in var.deploy_workflows : "${var.github_repo}/.github/workflows/${f}@refs/heads/main"]
-  plan_wf_pattern = "${var.github_repo}/.github/workflows/infra-plan.yml@*"
+  prefix     = "cardea-${var.environment}"
+  account_id = data.aws_caller_identity.current.account_id
+  region     = data.aws_region.current.region
+  oidc_aud   = "token.actions.githubusercontent.com:aud"
+  oidc_sub   = "token.actions.githubusercontent.com:sub"
+  oidc_wf    = "token.actions.githubusercontent.com:job_workflow_ref"
+  # Con immutable subject, GitHub firma el `sub` (y puede que `job_workflow_ref`) con
+  # owner@id/repo@id; se aceptan las dos formas para no depender de esa opción del repo.
+  repos           = compact([var.github_repo, var.github_repo_immutable])
+  sub_main        = [for r in local.repos : "repo:${r}:ref:refs/heads/main"]
+  sub_pr          = [for r in local.repos : "repo:${r}:pull_request"]
+  deploy_wf_refs  = flatten([for r in local.repos : [for f in var.deploy_workflows : "${r}/.github/workflows/${f}@refs/heads/main"]])
+  plan_wf_pattern = [for r in local.repos : "${r}/.github/workflows/infra-plan.yml@*"]
   state_arn       = "arn:aws:s3:::${var.state_bucket}"
   lock_arn        = "arn:aws:dynamodb:${local.region}:${local.account_id}:table/${var.lock_table}"
 }
