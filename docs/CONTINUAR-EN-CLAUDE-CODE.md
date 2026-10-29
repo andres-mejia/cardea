@@ -57,13 +57,15 @@ Dentro de Claude Code:
 - Las Lambda Function URL públicas están bloqueadas por política de cuenta: HTTP API en su lugar (`infra/modules/contact` ya lo hace).
 - La conexión Amplify–GitHub por Terraform falló en Fenora y se cableó a mano; `amplify-site` lleva `ignore_changes` para no romperla. Documentar el paso manual en `infra/README.md`.
 - Prefijo `cardea-` en todo; VPC, Aurora, Cognito, ECR y buckets propios. Ningún recurso de Fenora se referencia ni se comparte.
+- Dominio provisional (spec 001): `cardea.ai` es de un tercero; la landing va en `cardea.tekhos.com` y el panel en `cardea-app.tekhos.com` (zona `tekhos.com` de la cuenta, solo lectura). Correo: `cardea@tekhos.com`, que la recepción existente de `tekhos.com` reenvía a Andrés.
+- Aurora privada, Lambdas en VPC, NAT instance y bastión SSM (ADR-004), como Fenora hoy.
 - Perfil local: `fintrack-dev`, el mismo SSO de Fenora porque es la misma cuenta (`aws sso login --profile fintrack-dev`; es el valor por defecto de `provider.tf`). En CI, credenciales OIDC por entorno y `-var aws_profile=""`.
 - Aurora con `min_acu = 0` y auto-pause, como Fenora: la primera conexión tras la pausa reintenta (`DatabaseResumingException`).
 - Fargate para el gateway cuesta dinero en reposo: regla programada que lo baja a 0 tareas por la noche.
 
 ## 5. Qué portar de Fenora, y cómo
 
-El repo local es `~/py/cardea`; `fintrack` se espera en `~/py/fintrack` (si está en otra ruta, se indica al arrancar). Portar, adaptando nombres y quitando el historial de comentarios de issues de Fenora:
+El repo local es `~/py/cardea`; el clon de `fintrack` está en `~/py/fintrack/src/fintrack` (`~/py/fintrack` es una carpeta de documentos sin git); se lee de `origin/main`, porque el árbol local va muy por detrás. Portar, adaptando nombres y quitando el historial de comentarios de issues de Fenora:
 
 - `infra/bootstrap.sh`, `infra/environments/dev/{provider,backend}.tf` (ya adaptados), módulos `github-oidc`, `dns`, `email`, `cognito`, `vpc`, `aurora`, `ecr`, `lambda`, `api-gateway`, `messaging`, `assets`, `lambda-warmer`.
 - `.github/workflows/{infra-formato,infra-plan,infra-apply,backend-ci,backend-deploy}.yml` y `.github/scripts/guardia_plan.py` con `test_guardia_plan.py`.
@@ -75,7 +77,7 @@ El repo local es `~/py/cardea`; `fintrack` se espera en `~/py/fintrack` (si est�
 Copia esto como primer mensaje en Claude Code, abierto en `~/py/cardea`:
 
 ```
-Contexto: estoy en ~/py/cardea, monorepo de Cardea (gobierno del uso de IA), modelado sobre Fenora. Fenora es ~/py/fintrack (si no existe ahí, búscalo con `ls ~/py ~` y, si no está, clónalo: git clone https://github.com/andres-mejia/fintrack ~/py/fintrack). Misma cuenta AWS que Fenora, región eu-west-1, perfil SSO local `fintrack-dev` (ya he hecho `aws sso login --profile fintrack-dev`; si una llamada falla por sesión caducada, pídeme que lo repita, no cambies de perfil).
+Contexto: estoy en ~/py/cardea, monorepo de Cardea (gobierno del uso de IA), modelado sobre Fenora. Fenora es ~/py/fintrack/src/fintrack, léelo de origin/main (si no existe ahí, búscalo con `ls ~/py ~` y, si no está, clónalo: git clone https://github.com/andres-mejia/fintrack ~/py/fintrack). Misma cuenta AWS que Fenora, región eu-west-1, perfil SSO local `fintrack-dev` (ya he hecho `aws sso login --profile fintrack-dev`; si una llamada falla por sesión caducada, pídeme que lo repita, no cambies de perfil).
 
 Lee en este orden: CLAUDE.md, AGENTS.md, .specify/memory/constitution.md, docs/CONTINUAR-EN-CLAUDE-CODE.md y los tres ADR de docs/ADR. Las specs del MVP están en specs/; no las reescribas, refínalas.
 
@@ -84,7 +86,7 @@ Reglas duras: autor y committer Andrés Mejía <49398769+andres-mejia@users.nore
 Empieza por la spec 001-infra-base:
 1. git pull --rebase origin main y git checkout -b 001-infra-base.
 2. /speckit-clarify sobre specs/001-infra-base/spec.md. Si hay dudas que yo deba decidir, pregúntamelas todas juntas; si no, sigue.
-3. /speckit-plan. El plan tiene que listar qué módulos de ~/py/fintrack/infra/modules se portan, qué se adapta (prefijo cardea-, data source del proveedor OIDC que ya existe en la cuenta, HTTP API en vez de Function URL, ignore_changes en Amplify, estado remoto y locks propios de Cardea) y qué no se porta.
+3. /speckit-plan. El plan tiene que listar qué módulos de infra/modules de Fenora se portan, qué se adapta (prefijo cardea-, data source del proveedor OIDC que ya existe en la cuenta, HTTP API en vez de Function URL, ignore_changes en Amplify, estado remoto y locks propios de Cardea) y qué no se porta.
 4. /speckit-tasks y /speckit-analyze.
 5. Fase 0 de inventario, solo lectura, con `--profile fintrack-dev`: cuenta (`aws sts get-caller-identity`), proveedor OIDC de GitHub, zonas de Route 53, identidades SES, apps de Amplify, buckets y tablas que empiecen por cardea-, y el bucket de estado de Fenora para no tocarlo. No crees nada.
 6. Para y enséñame el plan, las tareas y el inventario antes de implementar.

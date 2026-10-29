@@ -14,14 +14,14 @@ El data plane corre en la infraestructura del cliente (o en nuestra cuenta para 
 `contracts/openapi` y `contracts/asyncapi` cambian antes que el código. El dominio no conoce infraestructura: puertos para gateway (`LlmGateway`, `McpGateway`), para eventos (`UsageEventSink`), para identidad y para almacenamiento; adaptadores AWS y Kubernetes intercambiables. Una dependencia nueva de AWS en el dominio es una regresión.
 
 ### IV. Mismo artefacto en nuestra cuenta y en casa del cliente
-Cada servicio del control plane es una imagen OCI que corre en Lambda con Lambda Web Adapter (patrón de Fenora) y en Kubernetes sin cambios. El data plane es un contenedor en ECS Fargate (dev) y en el chart de Helm (cliente). Nunca Lambda para el data plane (streaming SSE, sesiones MCP, latencia por petición). ADR-002.
+Cada servicio del control plane es una imagen OCI que corre en Lambda con Lambda Web Adapter (patrón de Fenora) y en Kubernetes sin cambios; en ambos casos habla JDBC con Postgres desde una red privada (ADR-004). El data plane es un contenedor en ECS Fargate (dev) y en el chart de Helm (cliente). Nunca Lambda para el data plane (streaming SSE, sesiones MCP, latencia por petición). ADR-002.
 
 ### V. Evidencia, no autodeclaración
 Un criterio de aceptación se cierra con el comando y su salida literal en el PR. Un test que no corre en CI no es un gate. La UI se compara con su maqueta del pitch (gate visual). Builds largos fuera del LLM.
 
 ## Stack y restricciones
 
-- Mismo stack y misma cuenta AWS que Fenora (`andres-mejia/fintrack`), región `eu-west-1`: Terraform plano por entorno con backend S3 propio (`cardea-terraform-state-<account>`, tabla `cardea-terraform-locks`), módulos propios en `infra/modules`, GitHub Actions con OIDC, Amplify, Cognito, Aurora Serverless v2 (Lambdas sin VPC, IAM auth y TLS), ECR, API Gateway, SQS, S3, SES, Bedrock como proveedor de modelos.
+- Mismo stack y misma cuenta AWS que Fenora (`andres-mejia/fintrack`), región `eu-west-1`: Terraform plano por entorno con backend S3 propio (`cardea-terraform-state-<account>`, tabla `cardea-terraform-locks`), módulos propios en `infra/modules`, GitHub Actions con OIDC, Amplify, Cognito, Aurora Serverless v2 privada (Lambdas en VPC con JDBC, IAM auth y TLS, NAT instance y bastión SSM; ADR-004), ECR, API Gateway, SQS, S3, SES, Bedrock como proveedor de modelos.
 - Compartir cuenta con Fenora obliga a: prefijo `cardea-` en todo recurso; **reutilizar** el proveedor OIDC de GitHub que ya existe en la cuenta (data source o import, nunca crearlo de nuevo); VPC, Aurora, Cognito y buckets propios, nunca los de Fenora; recordar que las Lambda Function URL públicas están bloqueadas por política de cuenta (HTTP API en su lugar) y que la conexión Amplify–GitHub puede requerir autorización manual.
 - Control plane: Java 21 + Quarkus, hexagonal, un servicio por Lambda, schema por tenant con `ScopedValue`, Flyway nunca al arrancar, secretos en Secrets Manager. Coste en microeuros (`long`), nunca coma flotante.
 - Frontend: Astro 5 (landing) y Next.js 16 + React 19 + Tailwind 4 (panel), tokens `cardea-*`, Archivo, tarjetas redondeadas sin borde, sin clichés de IA. Datos ilustrativos siempre etiquetados.
@@ -39,4 +39,4 @@ Un criterio de aceptación se cierra con el comando y su salida literal en el PR
 
 Esta constitución deriva de `AGENTS.md` y de los ADR de `docs/ADR/`. Una enmienda aquí exige el cambio equivalente en `AGENTS.md` o un ADR nuevo en el mismo PR. Todo plan y toda tarea de Spec Kit se contrastan con los principios I a V antes de implementarse; la desviación se declara antes de ejecutarse.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-29 | **Last Amended**: 2026-10-29
+**Version**: 1.1.0 | **Ratified**: 2026-10-29 | **Last Amended**: 2026-10-29
