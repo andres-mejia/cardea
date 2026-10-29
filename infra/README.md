@@ -41,9 +41,13 @@ Terraform plano en `environments/dev`, módulos en `modules/`, estado en `cardea
    ```
 5. **Conexión Amplify–GitHub**: Amplify no deja conectar un repositorio a una app que ya tiene ramas de despliegue manual, así que el token va en el apply que **crea** las apps (en el primero, o recreándolas si se crearon sin él):
    ```bash
-   terraform apply -var "github_access_token=$(gh auth token)" \
-     -replace=module.landing.aws_amplify_app.this -replace=module.panel.aws_amplify_app.this
+   # gh ≥ 2.17: gh auth token. gh 2.4 (Ubuntu) no lo tiene y su mensaje de error acabaría
+   # como token: Amplify responde "There was an issue setting up your repository".
+   export TF_VAR_github_access_token="$(gh auth token 2>/dev/null || gh auth status --show-token 2>&1 | grep -oE 'gh[opu]_[A-Za-z0-9_]+' | head -1)"
+   terraform apply -replace=module.panel.aws_amplify_app.this
+   unset TF_VAR_github_access_token
    ```
+   Solo el panel se conecta: la landing se publica por despliegue manual desde `landing-deploy.yml`.
    Después, `ignore_changes = [repository, access_token]` en `amplify-site` hace que los applies del pipeline (sin token) no toquen la conexión. El token no va al repo; sí queda en el estado (bucket cifrado, sin acceso público) como atributo sensible de la app.
 6. **A partir de aquí, el pipeline**: `infra · plan` en cada PR que toca `infra/**` y `infra · aplicar` en cada push a `main`.
 
